@@ -95,32 +95,49 @@ public sealed partial class DiagramService : IDiagramService
     private async Task CreateTableFilterAsync(SqlConnection connection,
         List<TableInfo> tables, CancellationToken cancellationToken)
     {
-        var sb = new StringBuilder();
-        sb.AppendLine("CREATE TABLE #diagram_tables (SchemaName sysname NOT NULL, TableName sysname NOT NULL);");
-
-        if (tables.Count > 0)
+        // Create temp table
+        await using var createCmd = new SqlCommand(
+            "CREATE TABLE #diagram_tables (SchemaName sysname NOT NULL, TableName sysname NOT NULL);",
+            connection)
         {
+            CommandTimeout = _options.CommandTimeoutSeconds
+        };
+        await createCmd.ExecuteNonQueryAsync(cancellationToken);
+
+        if (tables.Count == 0)
+            return;
+
+        // Use multiple batched INSERT statements to avoid SQL Server's 2100 parameter limit
+        // Batch size of 500 means max 1000 parameters per batch (well under the 2100 limit)
+        const int batchSize = 500;
+        for (var batchStart = 0; batchStart < tables.Count; batchStart += batchSize)
+        {
+            var batchEnd = Math.Min(batchStart + batchSize, tables.Count);
+            var batchCount = batchEnd - batchStart;
+
+            var sb = new StringBuilder();
             sb.Append("INSERT INTO #diagram_tables (SchemaName, TableName) VALUES ");
-            for (var i = 0; i < tables.Count; i++)
+
+            for (var i = 0; i < batchCount; i++)
             {
                 if (i > 0) sb.Append(", ");
                 sb.Append(CultureInfo.InvariantCulture, $"(@s{i}, @t{i})");
             }
-            sb.AppendLine(";");
+
+            await using var insertCmd = new SqlCommand(sb.ToString(), connection)
+            {
+                CommandTimeout = _options.CommandTimeoutSeconds
+            };
+
+            for (var i = 0; i < batchCount; i++)
+            {
+                var table = tables[batchStart + i];
+                insertCmd.Parameters.AddWithValue($"@s{i}", table.Schema);
+                insertCmd.Parameters.AddWithValue($"@t{i}", table.Name);
+            }
+
+            await insertCmd.ExecuteNonQueryAsync(cancellationToken);
         }
-
-        await using var cmd = new SqlCommand(sb.ToString(), connection)
-        {
-            CommandTimeout = _options.CommandTimeoutSeconds
-        };
-
-        for (var i = 0; i < tables.Count; i++)
-        {
-            cmd.Parameters.AddWithValue($"@s{i}", tables[i].Schema);
-            cmd.Parameters.AddWithValue($"@t{i}", tables[i].Name);
-        }
-
-        await cmd.ExecuteNonQueryAsync(cancellationToken);
     }
 
     private async Task<List<ColumnInfo>> QueryColumnsAsync(SqlConnection connection,

@@ -116,8 +116,15 @@ public class SqlServerMcpOptionsValidatorTests
     [InlineData(-1, false)]
     public void MaxRows_Boundaries(int value, bool shouldSucceed)
     {
-        var options = MakeValidOptions();
-        options.MaxRows = value;
+        var options = new SqlServerMcpOptions
+        {
+            Servers = new Dictionary<string, SqlServerConnection>
+            {
+                ["test"] = new() { ConnectionString = "Server=localhost;" }
+            },
+            MaxRows = value,
+            CommandTimeoutSeconds = 30
+        };
 
         var result = _validator.Validate(null, options);
 
@@ -135,8 +142,15 @@ public class SqlServerMcpOptionsValidatorTests
     [InlineData(601, false)]
     public void CommandTimeoutSeconds_Boundaries(int value, bool shouldSucceed)
     {
-        var options = MakeValidOptions();
-        options.CommandTimeoutSeconds = value;
+        var options = new SqlServerMcpOptions
+        {
+            Servers = new Dictionary<string, SqlServerConnection>
+            {
+                ["test"] = new() { ConnectionString = "Server=localhost;" }
+            },
+            MaxRows = 1000,
+            CommandTimeoutSeconds = value
+        };
 
         var result = _validator.Validate(null, options);
 

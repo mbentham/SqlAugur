@@ -37,15 +37,14 @@ Copy the example configuration and edit it with your SQL Server connections:
 cp SqlServerMcp/appsettings.example.json SqlServerMcp/appsettings.json
 ```
 
+**Example configuration (Windows Authentication - Recommended):**
+
 ```json
 {
   "SqlServerMcp": {
     "Servers": {
       "production": {
-        "ConnectionString": "Server=myserver;Database=master;Trusted_Connection=True;TrustServerCertificate=False;Encrypt=True;"
-      },
-      "staging": {
-        "ConnectionString": "Server=staging-server;Database=master;User Id=reader;Password=...;TrustServerCertificate=False;Encrypt=True;"
+        "ConnectionString": "Server=myserver;Database=master;Integrated Security=True;TrustServerCertificate=False;Encrypt=True;"
       }
     },
     "MaxRows": 1000,
@@ -62,7 +61,7 @@ cp SqlServerMcp/appsettings.example.json SqlServerMcp/appsettings.json
 | `CommandTimeoutSeconds` | 30 | SQL command timeout for all queries and procedures |
 | `EnableDbaTools` | false | Enable DBA diagnostic tools (First Responder Kit, DarlingData, sp_WhoIsActive) |
 
-> **Note:** `appsettings.json` is gitignored to prevent accidental credential commits. Only `appsettings.example.json` is tracked in source control.
+> **Security Note:** `appsettings.json` is gitignored to prevent accidental credential commits. See the [Connection Security](#connection-security-and-credential-management) section for recommended authentication methods including Windows Authentication, Azure Managed Identity, and secure credential storage options.
 
 ## Build & Run
 
@@ -208,6 +207,84 @@ The DBA diagnostic tools (First Responder Kit, DarlingData, sp_WhoIsActive) exec
 - **sp_WhoIsActive** — blocks `@destination_table`, `@return_schema`, `@schema`, and `@help`
 
 Each service also enforces a procedure whitelist — only the specific procedures listed above can be executed.
+
+### Connection Security and Credential Management
+
+**Recommended: Use Windows Authentication or Azure Managed Identity**
+
+The most secure authentication methods avoid storing credentials in configuration files entirely:
+
+**Windows Authentication (on-premises or domain-joined environments):**
+```json
+{
+  "SqlServerMcp": {
+    "Servers": {
+      "production": {
+        "ConnectionString": "Server=myserver;Database=master;Integrated Security=True;TrustServerCertificate=False;Encrypt=True;"
+      }
+    }
+  }
+}
+```
+
+**Azure Managed Identity (Azure SQL Database):**
+```json
+{
+  "SqlServerMcp": {
+    "Servers": {
+      "azure-prod": {
+        "ConnectionString": "Server=myserver.database.windows.net;Database=master;Authentication=Active Directory Managed Identity;TrustServerCertificate=False;Encrypt=True;"
+      }
+    }
+  }
+}
+```
+
+**If SQL Authentication is Required:**
+
+When Windows Authentication or Managed Identity are not available, follow these practices:
+
+1. **Never commit credentials to source control** — `appsettings.json` is already gitignored, but ensure you never commit credentials in example files or documentation
+
+2. **Use environment variables or secrets management:**
+
+   ```json
+   {
+     "SqlServerMcp": {
+       "Servers": {
+         "production": {
+           "ConnectionString": "Server=myserver;Database=master;User Id=sa;Password=${SQL_PASSWORD};Encrypt=True;TrustServerCertificate=False;"
+         }
+       }
+     }
+   }
+   ```
+
+   Then set the environment variable before running:
+   ```bash
+   export SQL_PASSWORD="your-secure-password"
+   dotnet run --project SqlServerMcp
+   ```
+
+3. **Use secure credential stores:**
+   - **Azure Key Vault** — for Azure deployments, integrate with `Azure.Extensions.AspNetCore.Configuration.Secrets`
+   - **AWS Secrets Manager** — for AWS deployments, use the AWS SDK to retrieve secrets
+   - **HashiCorp Vault** — for on-premises, use Vault for centralized secrets management
+   - **Windows Credential Manager** — for local development on Windows
+
+4. **Rotate credentials regularly** — if using SQL authentication, implement a credential rotation policy (e.g., every 90 days)
+
+5. **Use strong passwords** — if SQL authentication is required, use passwords with:
+   - Minimum 16 characters
+   - Mix of uppercase, lowercase, numbers, and special characters
+   - Generated randomly (not dictionary words or patterns)
+
+**Connection String Encryption:**
+
+Always use encrypted connections to protect credentials in transit:
+- Set `Encrypt=True` in all connection strings
+- Use `TrustServerCertificate=False` for production (only use `True` for development with self-signed certificates)
+- Ensure SQL Server has a valid SSL/TLS certificate from a trusted CA
 
 ### SQL Server Account Recommendations
 

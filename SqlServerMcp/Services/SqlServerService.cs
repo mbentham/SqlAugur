@@ -34,12 +34,7 @@ public sealed class SqlServerService : ISqlServerService
     public async Task<string> ExecuteQueryAsync(string serverName, string databaseName, string query, CancellationToken cancellationToken)
     {
         // Validate server name
-        if (!_options.Servers.TryGetValue(serverName, out var serverConfig))
-        {
-            var available = string.Join(", ", GetServerNames());
-            throw new ArgumentException(
-                $"Server '{serverName}' not found. Available servers: {available}");
-        }
+        var serverConfig = _options.ResolveServer(serverName);
 
         // Validate query
         var validationError = QueryValidator.Validate(query);
@@ -107,12 +102,7 @@ public sealed class SqlServerService : ISqlServerService
 
     public async Task<string> ListDatabasesAsync(string serverName, CancellationToken cancellationToken)
     {
-        if (!_options.Servers.TryGetValue(serverName, out var serverConfig))
-        {
-            var available = string.Join(", ", GetServerNames());
-            throw new ArgumentException(
-                $"Server '{serverName}' not found. Available servers: {available}");
-        }
+        var serverConfig = _options.ResolveServer(serverName);
 
         _logger.LogInformation("Listing databases on server {Server}", serverName);
 
@@ -152,12 +142,7 @@ public sealed class SqlServerService : ISqlServerService
 
     public async Task<string> GetEstimatedPlanAsync(string serverName, string databaseName, string query, CancellationToken cancellationToken)
     {
-        if (!_options.Servers.TryGetValue(serverName, out var serverConfig))
-        {
-            var available = string.Join(", ", GetServerNames());
-            throw new ArgumentException(
-                $"Server '{serverName}' not found. Available servers: {available}");
-        }
+        var serverConfig = _options.ResolveServer(serverName);
 
         var validationError = QueryValidator.Validate(query);
         if (validationError is not null)
@@ -201,22 +186,25 @@ public sealed class SqlServerService : ISqlServerService
         }
         finally
         {
+            using var cleanupCts = new CancellationTokenSource(TimeSpan.FromSeconds(_options.CommandTimeoutSeconds));
             await using var showplanOff = new SqlCommand("SET SHOWPLAN_XML OFF", connection)
             {
                 CommandTimeout = _options.CommandTimeoutSeconds
             };
-            await showplanOff.ExecuteNonQueryAsync(CancellationToken.None);
+            try
+            {
+                await showplanOff.ExecuteNonQueryAsync(cleanupCts.Token);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to reset SHOWPLAN_XML setting during cleanup");
+            }
         }
     }
 
     public async Task<string> GetActualPlanAsync(string serverName, string databaseName, string query, CancellationToken cancellationToken)
     {
-        if (!_options.Servers.TryGetValue(serverName, out var serverConfig))
-        {
-            var available = string.Join(", ", GetServerNames());
-            throw new ArgumentException(
-                $"Server '{serverName}' not found. Available servers: {available}");
-        }
+        var serverConfig = _options.ResolveServer(serverName);
 
         var validationError = QueryValidator.Validate(query);
         if (validationError is not null)
@@ -268,11 +256,19 @@ public sealed class SqlServerService : ISqlServerService
         }
         finally
         {
+            using var cleanupCts = new CancellationTokenSource(TimeSpan.FromSeconds(_options.CommandTimeoutSeconds));
             await using var statsOff = new SqlCommand("SET STATISTICS XML OFF", connection)
             {
                 CommandTimeout = _options.CommandTimeoutSeconds
             };
-            await statsOff.ExecuteNonQueryAsync(CancellationToken.None);
+            try
+            {
+                await statsOff.ExecuteNonQueryAsync(cleanupCts.Token);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to reset STATISTICS XML setting during cleanup");
+            }
         }
     }
 

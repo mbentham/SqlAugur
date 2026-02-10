@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using SqlServerMcp.Services;
 
@@ -69,19 +68,13 @@ public sealed class WhoIsActiveTool
         if (deltaInterval.HasValue)
             deltaInterval = Math.Clamp(deltaInterval.Value, 0, 15);
 
-        try
-        {
-            return await _whoIsActiveService.ExecuteWhoIsActiveAsync(
+        return await ToolHelper.ExecuteAsync(() =>
+            _whoIsActiveService.ExecuteWhoIsActiveAsync(
                 serverName, filter, filterType, notFilter, notFilterType,
                 showOwnSpid, showSystemSpids, showSleepingSpids,
                 getFullInnerText, getPlans, getOuterCommand, getTransactionInfo,
                 getTaskInfo, getLocks, getAvgTime, getAdditionalInfo,
                 getMemoryInfo, findBlockLeaders, deltaInterval, sortOrder,
-                formatOutput, cancellationToken);
-        }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
-        {
-            throw new McpException(ex.Message);
-        }
+                formatOutput, cancellationToken));
     }
 }

@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using SqlServerMcp.Services;
 
@@ -69,18 +68,12 @@ public sealed class QuickieStoreTool
         if (top.HasValue)
             top = Math.Clamp(top.Value, 1, 100);
 
-        try
-        {
-            return await _darlingDataService.ExecuteQuickieStoreAsync(
+        return await ToolHelper.ExecuteAsync(() =>
+            _darlingDataService.ExecuteQuickieStoreAsync(
                 serverName, databaseName, sortOrder, top, startDate, endDate,
                 executionCount, durationMs, procedureSchema, procedureName,
                 includeQueryIds, includeQueryHashes, ignorePlanIds, ignoreQueryIds,
                 queryTextSearch, queryTextSearchNot, waitFilter, queryType,
-                expertMode, formatOutput, getAllDatabases, cancellationToken);
-        }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
-        {
-            throw new McpException(ex.Message);
-        }
+                expertMode, formatOutput, getAllDatabases, cancellationToken));
     }
 }

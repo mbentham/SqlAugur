@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using SqlServerMcp.Services;
 
@@ -41,15 +40,9 @@ public sealed class BlitzCacheTool
         if (top.HasValue)
             top = Math.Clamp(top.Value, 1, 100);
 
-        try
-        {
-            return await _frkService.ExecuteBlitzCacheAsync(
+        return await ToolHelper.ExecuteAsync(() =>
+            _frkService.ExecuteBlitzCacheAsync(
                 serverName, sortOrder, top, expertMode, databaseName,
-                slowlySearchPlansFor, exportToExcel, cancellationToken);
-        }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
-        {
-            throw new McpException(ex.Message);
-        }
+                slowlySearchPlansFor, exportToExcel, cancellationToken));
     }
 }

@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using SqlServerMcp.Services;
 
@@ -40,15 +39,9 @@ public sealed class BlitzIndexTool
         int? filter = null,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            return await _frkService.ExecuteBlitzIndexAsync(
+        return await ToolHelper.ExecuteAsync(() =>
+            _frkService.ExecuteBlitzIndexAsync(
                 serverName, databaseName, schemaName, tableName,
-                getAllDatabases, mode, thresholdMb, filter, cancellationToken);
-        }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
-        {
-            throw new McpException(ex.Message);
-        }
+                getAllDatabases, mode, thresholdMb, filter, cancellationToken));
     }
 }

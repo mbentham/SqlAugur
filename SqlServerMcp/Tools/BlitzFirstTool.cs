@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using SqlServerMcp.Services;
 
@@ -39,15 +38,9 @@ public sealed class BlitzFirstTool
         if (seconds.HasValue)
             seconds = Math.Clamp(seconds.Value, 1, 60);
 
-        try
-        {
-            return await _frkService.ExecuteBlitzFirstAsync(
+        return await ToolHelper.ExecuteAsync(() =>
+            _frkService.ExecuteBlitzFirstAsync(
                 serverName, seconds, expertMode, showSleepingSpids,
-                sinceStartup, fileLatencyThresholdMs, cancellationToken);
-        }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
-        {
-            throw new McpException(ex.Message);
-        }
+                sinceStartup, fileLatencyThresholdMs, cancellationToken));
     }
 }

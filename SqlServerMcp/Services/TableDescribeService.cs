@@ -50,16 +50,13 @@ public sealed class TableDescribeService : ITableDescribeService
         // Validate table exists
         await ValidateTableExistsAsync(connection, schemaName, tableName, cancellationToken);
 
-        // Run all queries in parallel for better performance
-        var columnsTask = QueryColumnsAsync(connection, schemaName, tableName, cancellationToken);
-        var indexesTask = QueryIndexesAsync(connection, schemaName, tableName, cancellationToken);
-        var foreignKeysTask = QueryForeignKeysAsync(connection, schemaName, tableName, cancellationToken);
-        var checkConstraintsTask = QueryCheckConstraintsAsync(connection, schemaName, tableName, cancellationToken);
-
-        await Task.WhenAll(columnsTask, indexesTask, foreignKeysTask, checkConstraintsTask);
+        var columns = await QueryColumnsAsync(connection, schemaName, tableName, cancellationToken);
+        var indexes = await QueryIndexesAsync(connection, schemaName, tableName, cancellationToken);
+        var foreignKeys = await QueryForeignKeysAsync(connection, schemaName, tableName, cancellationToken);
+        var checkConstraints = await QueryCheckConstraintsAsync(connection, schemaName, tableName, cancellationToken);
 
         return BuildMarkdown(serverName, databaseName, schemaName, tableName,
-            columnsTask.Result, indexesTask.Result, foreignKeysTask.Result, checkConstraintsTask.Result);
+            columns, indexes, foreignKeys, checkConstraints);
     }
 
     private async Task ValidateTableExistsAsync(SqlConnection connection,

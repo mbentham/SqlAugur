@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using SqlServerMcp.Services;
 
@@ -28,14 +27,8 @@ public sealed class DescribeTableTool
         [Description("Schema name (default 'dbo')")] string schemaName = "dbo",
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            return await _tableDescribeService.DescribeTableAsync(
-                serverName, databaseName, schemaName, tableName, cancellationToken);
-        }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
-        {
-            throw new McpException(ex.Message);
-        }
+        return await ToolHelper.ExecuteAsync(() =>
+            _tableDescribeService.DescribeTableAsync(
+                serverName, databaseName, schemaName, tableName, cancellationToken));
     }
 }

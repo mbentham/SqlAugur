@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using SqlServerMcp.Services;
 
@@ -49,17 +48,11 @@ public sealed class PressureDetectorTool
         if (sampleSeconds.HasValue)
             sampleSeconds = Math.Clamp(sampleSeconds.Value, 0, 10);
 
-        try
-        {
-            return await _darlingDataService.ExecutePressureDetectorAsync(
+        return await ToolHelper.ExecuteAsync(() =>
+            _darlingDataService.ExecutePressureDetectorAsync(
                 serverName, whatToCheck, skipQueries, skipPlanXml,
                 minimumDiskLatencyMs, cpuUtilizationThreshold, skipWaits,
                 skipPerfmon, sampleSeconds, troubleshootBlocking, gimmeDanger,
-                cancellationToken);
-        }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
-        {
-            throw new McpException(ex.Message);
-        }
+                cancellationToken));
     }
 }

@@ -63,16 +63,10 @@ public sealed class BlitzLockTool
             parsedEnd = e;
         }
 
-        try
-        {
-            return await _frkService.ExecuteBlitzLockAsync(
+        return await ToolHelper.ExecuteAsync(() =>
+            _frkService.ExecuteBlitzLockAsync(
                 serverName, databaseName, parsedStart, parsedEnd,
                 objectName, storedProcName, appName, hostName,
-                loginName, victimsOnly, eventSessionName, cancellationToken);
-        }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
-        {
-            throw new McpException(ex.Message);
-        }
+                loginName, victimsOnly, eventSessionName, cancellationToken));
     }
 }

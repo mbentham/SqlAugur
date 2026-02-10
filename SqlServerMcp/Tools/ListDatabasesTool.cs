@@ -25,13 +25,7 @@ public sealed class ListDatabasesTool
         [Description("Name of the SQL Server to query (use list_servers to see available names)")] string serverName,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            return await _sqlServerService.ListDatabasesAsync(serverName, cancellationToken);
-        }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
-        {
-            throw new McpException(ex.Message);
-        }
+        return await ToolHelper.ExecuteAsync(() =>
+            _sqlServerService.ListDatabasesAsync(serverName, cancellationToken));
     }
 }

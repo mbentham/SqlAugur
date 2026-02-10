@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using SqlServerMcp.Services;
 
@@ -48,17 +47,11 @@ public sealed class QueryReproBuilderTool
         string? queryTextSearchNot = null,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            return await _darlingDataService.ExecuteQueryReproBuilderAsync(
+        return await ToolHelper.ExecuteAsync(() =>
+            _darlingDataService.ExecuteQueryReproBuilderAsync(
                 serverName, databaseName, startDate, endDate,
                 includePlanIds, includeQueryIds, ignorePlanIds, ignoreQueryIds,
                 procedureSchema, procedureName, queryTextSearch, queryTextSearchNot,
-                cancellationToken);
-        }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
-        {
-            throw new McpException(ex.Message);
-        }
+                cancellationToken));
     }
 }

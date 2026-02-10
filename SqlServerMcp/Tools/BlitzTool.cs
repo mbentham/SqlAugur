@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using SqlServerMcp.Services;
 
@@ -34,15 +33,9 @@ public sealed class BlitzTool
         bool? bringThePain = null,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            return await _frkService.ExecuteBlitzAsync(
+        return await ToolHelper.ExecuteAsync(() =>
+            _frkService.ExecuteBlitzAsync(
                 serverName, checkUserDatabaseObjects, checkServerInfo,
-                ignorePrioritiesAbove, bringThePain, cancellationToken);
-        }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
-        {
-            throw new McpException(ex.Message);
-        }
+                ignorePrioritiesAbove, bringThePain, cancellationToken));
     }
 }

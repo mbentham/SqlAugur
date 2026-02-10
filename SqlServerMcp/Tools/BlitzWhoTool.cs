@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using SqlServerMcp.Services;
 
@@ -46,17 +45,11 @@ public sealed class BlitzWhoTool
         string? sortOrder = null,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            return await _frkService.ExecuteBlitzWhoAsync(
+        return await ToolHelper.ExecuteAsync(() =>
+            _frkService.ExecuteBlitzWhoAsync(
                 serverName, expertMode, showSleepingSpids,
                 minElapsedSeconds, minCpuTime, minLogicalReads,
                 minBlockingSeconds, minTempdbMb, showActualParameters,
-                getLiveQueryPlan, sortOrder, cancellationToken);
-        }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
-        {
-            throw new McpException(ex.Message);
-        }
+                getLiveQueryPlan, sortOrder, cancellationToken));
     }
 }

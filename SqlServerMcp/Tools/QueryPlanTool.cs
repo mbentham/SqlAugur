@@ -32,21 +32,15 @@ public sealed class QueryPlanTool
         string planType = "estimated",
         CancellationToken cancellationToken = default)
     {
-        try
+        if (!planType.Equals("estimated", StringComparison.OrdinalIgnoreCase) &&
+            !planType.Equals("actual", StringComparison.OrdinalIgnoreCase))
         {
-            if (!planType.Equals("estimated", StringComparison.OrdinalIgnoreCase) &&
-                !planType.Equals("actual", StringComparison.OrdinalIgnoreCase))
-            {
-                throw new McpException($"Invalid planType '{planType}'. Must be 'estimated' or 'actual'.");
-            }
+            throw new McpException($"Invalid planType '{planType}'. Must be 'estimated' or 'actual'.");
+        }
 
-            return planType.Equals("actual", StringComparison.OrdinalIgnoreCase)
-                ? await _sqlServerService.GetActualPlanAsync(serverName, databaseName, query, cancellationToken)
-                : await _sqlServerService.GetEstimatedPlanAsync(serverName, databaseName, query, cancellationToken);
-        }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
-        {
-            throw new McpException(ex.Message);
-        }
+        return await ToolHelper.ExecuteAsync(() =>
+            planType.Equals("actual", StringComparison.OrdinalIgnoreCase)
+                ? _sqlServerService.GetActualPlanAsync(serverName, databaseName, query, cancellationToken)
+                : _sqlServerService.GetEstimatedPlanAsync(serverName, databaseName, query, cancellationToken));
     }
 }

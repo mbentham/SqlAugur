@@ -30,14 +30,8 @@ public sealed class GetDiagramTool
     {
         maxTables = Math.Clamp(maxTables, 1, 200);
 
-        try
-        {
-            return await _diagramService.GenerateDiagramAsync(
-                serverName, databaseName, schemaFilter, maxTables, cancellationToken);
-        }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
-        {
-            throw new McpException(ex.Message);
-        }
+        return await ToolHelper.ExecuteAsync(() =>
+            _diagramService.GenerateDiagramAsync(
+                serverName, databaseName, schemaFilter, maxTables, cancellationToken));
     }
 }

@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using SqlServerMcp.Services;
 
@@ -40,15 +39,9 @@ public sealed class HumanEventsBlockViewerTool
         int? maxBlockingEvents = null,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            return await _darlingDataService.ExecuteHumanEventsBlockViewerAsync(
+        return await ToolHelper.ExecuteAsync(() =>
+            _darlingDataService.ExecuteHumanEventsBlockViewerAsync(
                 serverName, sessionName, targetType, startDate, endDate,
-                databaseName, objectName, maxBlockingEvents, cancellationToken);
-        }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
-        {
-            throw new McpException(ex.Message);
-        }
+                databaseName, objectName, maxBlockingEvents, cancellationToken));
     }
 }

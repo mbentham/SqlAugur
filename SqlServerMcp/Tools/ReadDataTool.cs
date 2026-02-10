@@ -27,13 +27,7 @@ public sealed class ReadDataTool
         [Description("Name of the database to query (use list_databases to see available databases)")] string databaseName,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            return await _sqlServerService.ExecuteQueryAsync(serverName, databaseName, query, cancellationToken);
-        }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
-        {
-            throw new McpException(ex.Message);
-        }
+        return await ToolHelper.ExecuteAsync(() =>
+            _sqlServerService.ExecuteQueryAsync(serverName, databaseName, query, cancellationToken));
     }
 }

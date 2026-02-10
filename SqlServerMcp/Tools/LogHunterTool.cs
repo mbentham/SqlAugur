@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using SqlServerMcp.Services;
 
@@ -38,15 +37,9 @@ public sealed class LogHunterTool
         bool? firstLogOnly = null,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            return await _darlingDataService.ExecuteLogHunterAsync(
+        return await ToolHelper.ExecuteAsync(() =>
+            _darlingDataService.ExecuteLogHunterAsync(
                 serverName, daysBack, startDate, endDate,
-                customMessage, customMessageOnly, firstLogOnly, cancellationToken);
-        }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
-        {
-            throw new McpException(ex.Message);
-        }
+                customMessage, customMessageOnly, firstLogOnly, cancellationToken));
     }
 }

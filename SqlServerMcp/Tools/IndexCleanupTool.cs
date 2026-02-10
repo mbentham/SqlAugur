@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using SqlServerMcp.Services;
 
@@ -44,16 +43,10 @@ public sealed class IndexCleanupTool
         bool? getAllDatabases = null,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            return await _darlingDataService.ExecuteIndexCleanupAsync(
+        return await ToolHelper.ExecuteAsync(() =>
+            _darlingDataService.ExecuteIndexCleanupAsync(
                 serverName, databaseName, schemaName, tableName,
                 minReads, minWrites, minSizeGb, minRows,
-                dedupeOnly, getAllDatabases, cancellationToken);
-        }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
-        {
-            throw new McpException(ex.Message);
-        }
+                dedupeOnly, getAllDatabases, cancellationToken));
     }
 }

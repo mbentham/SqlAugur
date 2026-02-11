@@ -16,6 +16,7 @@ A .NET MCP (Model Context Protocol) server that gives AI assistants safe, read-o
 - Table documentation — Markdown descriptions of columns, indexes, and constraints
 - Query plan analysis — estimated or actual XML execution plans
 - DBA diagnostics — optional integration with First Responder Kit, DarlingData, and sp_WhoIsActive
+- Progressive discovery — optional dynamic toolset mode reduces initial context window usage by exposing DBA tools on demand
 
 ## Prerequisites
 
@@ -55,7 +56,8 @@ cp SqlServerMcp/appsettings.example.json SqlServerMcp/appsettings.json
     "MaxQueriesPerMinute": 60,
     "EnableFirstResponderKit": false,
     "EnableDarlingData": false,
-    "EnableWhoIsActive": false
+    "EnableWhoIsActive": false,
+    "EnableDynamicToolsets": false
   }
 }
 ```
@@ -70,6 +72,7 @@ cp SqlServerMcp/appsettings.example.json SqlServerMcp/appsettings.json
 | `EnableFirstResponderKit` | false | Enable First Responder Kit diagnostic tools (sp_Blitz, sp_BlitzFirst, sp_BlitzCache, sp_BlitzIndex, sp_BlitzWho, sp_BlitzLock) |
 | `EnableDarlingData` | false | Enable DarlingData diagnostic tools (sp_PressureDetector, sp_QuickieStore, sp_HealthParser, sp_LogHunter, sp_HumanEventsBlockViewer, sp_IndexCleanup, sp_QueryReproBuilder) |
 | `EnableWhoIsActive` | false | Enable sp_WhoIsActive session monitoring |
+| `EnableDynamicToolsets` | false | Enable progressive tool discovery. When true, DBA tools are not loaded at startup — instead, 3 discovery meta-tools (`list_toolsets`, `get_toolset_tools`, `enable_toolset`) let the AI enable toolsets on demand. Reduces initial context window usage. The individual `Enable*` flags still control which toolsets are allowed. |
 
 > **Security Note:** `appsettings.json` is gitignored to prevent accidental credential commits. See [SECURITY.md](SECURITY.md) for recommended authentication methods including Windows Authentication, Azure Managed Identity, and secure credential storage options.
 
@@ -103,7 +106,7 @@ Add to your MCP client configuration (works for both Claude Desktop and Claude C
 
 ## Tools
 
-The server exposes 21 tools: 7 core tools that are always available, and 14 optional DBA tools controlled by three independent flags.
+By default, the server exposes up to 21 tools: 7 core tools that are always available, and 14 optional DBA tools controlled by three independent flags. When `EnableDynamicToolsets` is true, the server starts with only the 7 core tools plus 3 discovery meta-tools — DBA toolsets are loaded on demand to reduce initial context window usage.
 
 ### Core Tools
 
@@ -116,6 +119,24 @@ The server exposes 21 tools: 7 core tools that are always available, and 14 opti
 | `get_plantuml_diagram` | Generates a PlantUML ER diagram and saves it to a specified file path. Shows tables, columns, primary keys, and foreign key relationships. Supports schema filtering and a configurable table limit (max 200). |
 | `describe_table` | Returns comprehensive table metadata in Markdown: columns with data types, nullability, defaults, identity, computed expressions, indexes, foreign keys, and constraints. |
 | `get_query_plan` | Returns the estimated or actual XML execution plan for a SELECT query. Estimated plans show the optimizer's plan without executing; actual plans include runtime statistics. |
+
+### Progressive Discovery (requires `EnableDynamicToolsets: true`)
+
+When `EnableDynamicToolsets` is enabled, the DBA toolsets (First Responder Kit, DarlingData, sp_WhoIsActive) are not loaded at startup. Instead, 3 lightweight discovery tools let the AI explore and enable toolsets on demand. This reduces initial context window usage — the AI only pays the token cost for toolsets it actually needs.
+
+| Tool | Description |
+|------|-------------|
+| `list_toolsets` | Lists available DBA toolsets with their current status (available, enabled, or not configured) and tool counts. |
+| `get_toolset_tools` | Returns detailed information about a specific toolset's tools and parameters before enabling it. |
+| `enable_toolset` | Enables a toolset, making its tools available for use. Only works if the admin has enabled the toolset via the corresponding `Enable*` config flag. |
+
+The existing `Enable*` config flags act as a security ceiling — `enable_toolset` will refuse to activate a toolset that the administrator has not allowed in `appsettings.json`. For example, if `EnableFirstResponderKit` is `false`, calling `enable_toolset("first_responder_kit")` returns an error.
+
+**Example flow:**
+1. AI calls `list_toolsets` — sees `first_responder_kit` is "available" (configured but not yet enabled)
+2. AI calls `get_toolset_tools("first_responder_kit")` — reviews the 6 tools and their parameters
+3. AI calls `enable_toolset("first_responder_kit")` — the 6 tools are now registered and usable
+4. AI calls `sp_blitz` — runs the health check as normal
 
 ### First Responder Kit (requires `EnableFirstResponderKit: true`)
 

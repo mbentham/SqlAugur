@@ -37,14 +37,19 @@ static bool ReadBoolFlag(IConfiguration config, string key)
 var enableFirstResponderKit = ReadBoolFlag(builder.Configuration, "EnableFirstResponderKit");
 var enableDarlingData = ReadBoolFlag(builder.Configuration, "EnableDarlingData");
 var enableWhoIsActive = ReadBoolFlag(builder.Configuration, "EnableWhoIsActive");
+var enableDynamicToolsets = ReadBoolFlag(builder.Configuration, "EnableDynamicToolsets");
 
-// Register DBA services only when their toolkit is enabled
+// Register DBA services when their toolkit is enabled (needed in both static and dynamic modes)
 if (enableFirstResponderKit)
     builder.Services.AddSingleton<IFirstResponderService, FirstResponderService>();
 if (enableDarlingData)
     builder.Services.AddSingleton<IDarlingDataService, DarlingDataService>();
 if (enableWhoIsActive)
     builder.Services.AddSingleton<IWhoIsActiveService, WhoIsActiveService>();
+
+// In dynamic mode, register the toolset manager for on-demand tool discovery
+if (enableDynamicToolsets)
+    builder.Services.AddSingleton<IToolsetManager, ToolsetManager>();
 
 // Configure MCP server with appropriate tool set
 builder.Services
@@ -57,7 +62,19 @@ builder.Services
         };
     })
     .WithStdioServerTransport()
-    .WithTools(ToolRegistry.GetToolTypes(enableFirstResponderKit, enableDarlingData, enableWhoIsActive));
+    .WithTools(ToolRegistry.GetToolTypes(
+        enableFirstResponderKit, enableDarlingData, enableWhoIsActive, enableDynamicToolsets));
+
+// Advertise dynamic tool list support when in dynamic mode
+if (enableDynamicToolsets && (enableFirstResponderKit || enableDarlingData || enableWhoIsActive))
+{
+    builder.Services.PostConfigure<McpServerOptions>(options =>
+    {
+        options.Capabilities ??= new();
+        options.Capabilities.Tools ??= new();
+        options.Capabilities.Tools.ListChanged = true;
+    });
+}
 
 var host = builder.Build();
 

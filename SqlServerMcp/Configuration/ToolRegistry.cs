@@ -41,9 +41,21 @@ internal static class ToolRegistry
         typeof(WhoIsActiveTool),
     ];
 
+    internal static readonly Type[] DiscoveryToolTypes =
+    [
+        typeof(DiscoveryTools),
+    ];
+
     internal static IEnumerable<Type> GetToolTypes(
-        bool enableFirstResponderKit, bool enableDarlingData, bool enableWhoIsActive)
+        bool enableFirstResponderKit, bool enableDarlingData, bool enableWhoIsActive,
+        bool enableDynamicToolsets = false)
     {
+        if (enableDynamicToolsets)
+        {
+            bool anyDbaEnabled = enableFirstResponderKit || enableDarlingData || enableWhoIsActive;
+            return anyDbaEnabled ? CoreTools.Concat(DiscoveryToolTypes) : CoreTools;
+        }
+
         IEnumerable<Type> tools = CoreTools;
 
         if (enableFirstResponderKit)

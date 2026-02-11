@@ -71,6 +71,18 @@ public class ToolRegistryTests
     }
 
     [Fact]
+    public void DiscoveryTools_ContainsExpectedTypes()
+    {
+        Assert.Contains(typeof(DiscoveryTools), ToolRegistry.DiscoveryToolTypes);
+    }
+
+    [Fact]
+    public void DiscoveryTools_HasExactCount()
+    {
+        Assert.Single(ToolRegistry.DiscoveryToolTypes);
+    }
+
+    [Fact]
     public void AllArrays_HaveNoOverlap()
     {
         var arrays = new[]
@@ -79,6 +91,7 @@ public class ToolRegistryTests
             ToolRegistry.FirstResponderKitTools,
             ToolRegistry.DarlingDataTools,
             ToolRegistry.WhoIsActiveTools,
+            ToolRegistry.DiscoveryToolTypes,
         };
 
         for (var i = 0; i < arrays.Length; i++)
@@ -98,6 +111,7 @@ public class ToolRegistryTests
             .Concat(ToolRegistry.FirstResponderKitTools)
             .Concat(ToolRegistry.DarlingDataTools)
             .Concat(ToolRegistry.WhoIsActiveTools)
+            .Concat(ToolRegistry.DiscoveryToolTypes)
             .ToList();
 
         Assert.Equal(all.Count, all.Distinct().Count());
@@ -160,5 +174,71 @@ public class ToolRegistryTests
             enableFirstResponderKit: true, enableDarlingData: true, enableWhoIsActive: true).ToList();
 
         Assert.Equal(21, types.Count);
+    }
+
+    // ───────────────────────────────────────────────
+    // Dynamic toolset mode
+    // ───────────────────────────────────────────────
+
+    [Fact]
+    public void GetToolTypes_DynamicMode_ReturnsCoreAndDiscovery()
+    {
+        var types = ToolRegistry.GetToolTypes(
+            enableFirstResponderKit: true, enableDarlingData: true, enableWhoIsActive: true,
+            enableDynamicToolsets: true).ToList();
+
+        // 7 core + 1 discovery type
+        Assert.Equal(8, types.Count);
+        Assert.Contains(typeof(ListServersTool), types);
+        Assert.Contains(typeof(DiscoveryTools), types);
+    }
+
+    [Fact]
+    public void GetToolTypes_DynamicMode_ExcludesDbaTools()
+    {
+        var types = ToolRegistry.GetToolTypes(
+            enableFirstResponderKit: true, enableDarlingData: true, enableWhoIsActive: true,
+            enableDynamicToolsets: true).ToList();
+
+        Assert.DoesNotContain(typeof(BlitzTool), types);
+        Assert.DoesNotContain(typeof(PressureDetectorTool), types);
+        Assert.DoesNotContain(typeof(WhoIsActiveTool), types);
+    }
+
+    [Fact]
+    public void GetToolTypes_DynamicMode_IgnoresIndividualFlags()
+    {
+        // Even with only FRK enabled, dynamic mode still just returns core + discovery
+        var types = ToolRegistry.GetToolTypes(
+            enableFirstResponderKit: true, enableDarlingData: false, enableWhoIsActive: false,
+            enableDynamicToolsets: true).ToList();
+
+        Assert.Equal(8, types.Count);
+        Assert.DoesNotContain(typeof(BlitzTool), types);
+        Assert.Contains(typeof(DiscoveryTools), types);
+    }
+
+    [Fact]
+    public void GetToolTypes_DynamicMode_AllDbaFlagsOff_ReturnsCoreOnly()
+    {
+        var types = ToolRegistry.GetToolTypes(
+            enableFirstResponderKit: false, enableDarlingData: false, enableWhoIsActive: false,
+            enableDynamicToolsets: true).ToList();
+
+        // No DBA flags enabled means nothing to discover — no discovery tools
+        Assert.Equal(7, types.Count);
+        Assert.DoesNotContain(typeof(DiscoveryTools), types);
+    }
+
+    [Fact]
+    public void GetToolTypes_DynamicModeFalse_DefaultParameter_ExistingBehavior()
+    {
+        // Verify the default parameter value preserves existing behavior
+        var types = ToolRegistry.GetToolTypes(
+            enableFirstResponderKit: true, enableDarlingData: false, enableWhoIsActive: false).ToList();
+
+        Assert.Equal(13, types.Count);
+        Assert.Contains(typeof(BlitzTool), types);
+        Assert.DoesNotContain(typeof(DiscoveryTools), types);
     }
 }

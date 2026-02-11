@@ -10,4 +10,5 @@ public sealed class SqlServerMcpOptions
     public bool EnableFirstResponderKit { get; init; }
     public bool EnableDarlingData { get; init; }
     public bool EnableWhoIsActive { get; init; }
+    public bool EnableDynamicToolsets { get; init; }
 }

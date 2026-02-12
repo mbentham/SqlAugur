@@ -17,7 +17,7 @@ public class QueryPlanToolTests
     [Fact]
     public async Task EstimatedPlanType_CallsEstimatedMethod()
     {
-        await _tool.GetQueryPlan("srv", "SELECT 1", "mydb", planType: "estimated");
+        await _tool.GetQueryPlan("srv", "SELECT 1", "mydb", planType: "estimated", cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.True(_stub.EstimatedCalled);
         Assert.False(_stub.ActualCalled);
@@ -26,7 +26,7 @@ public class QueryPlanToolTests
     [Fact]
     public async Task ActualPlanType_CallsActualMethod()
     {
-        await _tool.GetQueryPlan("srv", "SELECT 1", "mydb", planType: "actual");
+        await _tool.GetQueryPlan("srv", "SELECT 1", "mydb", planType: "actual", cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.True(_stub.ActualCalled);
         Assert.False(_stub.EstimatedCalled);
@@ -36,7 +36,7 @@ public class QueryPlanToolTests
     public async Task InvalidPlanType_ThrowsMcpException()
     {
         var ex = await Assert.ThrowsAsync<McpException>(
-            () => _tool.GetQueryPlan("srv", "SELECT 1", "mydb", planType: "invalid"));
+            () => _tool.GetQueryPlan("srv", "SELECT 1", "mydb", planType: "invalid", cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains("planType", ex.Message);
     }
@@ -44,7 +44,7 @@ public class QueryPlanToolTests
     [Fact]
     public async Task CaseInsensitivePlanType_Works()
     {
-        await _tool.GetQueryPlan("srv", "SELECT 1", "mydb", planType: "ESTIMATED");
+        await _tool.GetQueryPlan("srv", "SELECT 1", "mydb", planType: "ESTIMATED", cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.True(_stub.EstimatedCalled);
     }
@@ -55,7 +55,7 @@ public class QueryPlanToolTests
         _stub.ExceptionToThrow = new ArgumentException("Server 'bad' not found.");
 
         var ex = await Assert.ThrowsAsync<McpException>(
-            () => _tool.GetQueryPlan("bad", "SELECT 1", "mydb"));
+            () => _tool.GetQueryPlan("bad", "SELECT 1", "mydb", cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains("Server 'bad' not found", ex.Message);
     }

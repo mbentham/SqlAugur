@@ -17,8 +17,7 @@ public sealed class SqlServerContainerFixture : IAsyncLifetime
         return "Aa1!" + Convert.ToHexString(RandomNumberGenerator.GetBytes(16));
     }
 
-    private readonly IContainer _container = new ContainerBuilder()
-        .WithImage("mcr.microsoft.com/mssql/server:2025-latest")
+    private readonly IContainer _container = new ContainerBuilder("mcr.microsoft.com/mssql/server:2025-latest")
         .WithPortBinding(MsSqlPort, true)
         .WithEnvironment("ACCEPT_EULA", "Y")
         .WithEnvironment("MSSQL_SA_PASSWORD", SaPassword)
@@ -39,16 +38,16 @@ public sealed class SqlServerContainerFixture : IAsyncLifetime
     public const string TestDatabaseName = "McpTestDb";
     public const string ServerName = "testcontainer";
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         await _container.StartAsync();
         await WaitForSqlServerAsync();
         await SeedDatabaseAsync();
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-        await _container.DisposeAsync().AsTask();
+        await _container.DisposeAsync();
     }
 
     private async Task WaitForSqlServerAsync()

@@ -17,7 +17,7 @@ public class BlitzLockToolTests
     [Fact]
     public async Task ValidStartDate_ParsedCorrectly()
     {
-        await _tool.BlitzLock("srv", startDate: "2024-06-15");
+        await _tool.BlitzLock("srv", startDate: "2024-06-15", cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.NotNull(_stub.CapturedStartDate);
         Assert.Equal(new DateTime(2024, 6, 15), _stub.CapturedStartDate);
@@ -27,7 +27,7 @@ public class BlitzLockToolTests
     public async Task InvalidStartDate_ThrowsMcpException()
     {
         var ex = await Assert.ThrowsAsync<McpException>(
-            () => _tool.BlitzLock("srv", startDate: "not-a-date"));
+            () => _tool.BlitzLock("srv", startDate: "not-a-date", cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains("Invalid start date", ex.Message);
     }
@@ -36,7 +36,7 @@ public class BlitzLockToolTests
     public async Task InvalidEndDate_ThrowsMcpException()
     {
         var ex = await Assert.ThrowsAsync<McpException>(
-            () => _tool.BlitzLock("srv", endDate: "not-a-date"));
+            () => _tool.BlitzLock("srv", endDate: "not-a-date", cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains("Invalid end date", ex.Message);
     }
@@ -44,7 +44,7 @@ public class BlitzLockToolTests
     [Fact]
     public async Task NullDates_PassedAsNull()
     {
-        await _tool.BlitzLock("srv");
+        await _tool.BlitzLock("srv", cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Null(_stub.CapturedStartDate);
         Assert.Null(_stub.CapturedEndDate);
@@ -56,7 +56,7 @@ public class BlitzLockToolTests
         _stub.ExceptionToThrow = new ArgumentException("Server 'bad' not found.");
 
         var ex = await Assert.ThrowsAsync<McpException>(
-            () => _tool.BlitzLock("bad"));
+            () => _tool.BlitzLock("bad", cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains("Server 'bad' not found", ex.Message);
     }
@@ -67,7 +67,7 @@ public class BlitzLockToolTests
         _stub.ExceptionToThrow = new InvalidOperationException("Procedure not installed.");
 
         var ex = await Assert.ThrowsAsync<McpException>(
-            () => _tool.BlitzLock("srv"));
+            () => _tool.BlitzLock("srv", cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains("Procedure not installed", ex.Message);
     }

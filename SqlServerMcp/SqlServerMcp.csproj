@@ -13,10 +13,10 @@
 
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol" Version="0.8.0-preview.1" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
     <PackageReference Include="Microsoft.SqlServer.TransactSql.ScriptDom" Version="170.157.0" />
-    <PackageReference Include="System.Threading.RateLimiting" Version="10.0.2" />
+    <PackageReference Include="System.Threading.RateLimiting" Version="10.0.3" />
   </ItemGroup>
 
 </Project>

@@ -22,16 +22,16 @@ public sealed class GetSchemaOverviewTool
         Title = "Get Database Schema Overview",
         ReadOnly = true,
         Idempotent = true)]
-    [Description("Returns a concise Markdown overview of the database schema: tables, columns with data types, primary keys, foreign key references, unique constraints, check constraints, and defaults. Designed for quick context loading — use get_plantuml_diagram for visual PlantUML output or describe_table for full single-table detail.")]
+    [Description("Markdown overview of database schema: tables, columns, types, PKs, FKs, unique/check constraints, defaults. Use get_plantuml_diagram for visual ER output or describe_table for single-table detail.")]
     public async Task<string> GetSchemaOverview(
-        [Description("Name of the SQL Server to query (use list_servers to see available names)")] string serverName,
-        [Description("Name of the database (use list_databases to see available databases)")] string databaseName,
-        [Description("Optional comma-separated schema names to include (e.g. 'dbo,sales'). If specified, only tables in these schemas are shown. Overrides excludeSchemas.")] string? includeSchemas = null,
-        [Description("Optional comma-separated schema names to exclude (e.g. 'audit,staging'). Ignored when includeSchemas is specified.")] string? excludeSchemas = null,
-        [Description("Optional comma-separated table names to include (e.g. 'Users,Orders'). If specified, only these tables are shown. Overrides excludeTables.")] string? includeTables = null,
-        [Description("Optional comma-separated table names to exclude (e.g. 'AuditLog,TempData'). Ignored when includeTables is specified.")] string? excludeTables = null,
-        [Description("Maximum number of tables to include (1-200, default 50)")] int maxTables = 50,
-        [Description("When true, shows only primary key and foreign key columns without data types. Useful for high-level relationship maps of large databases.")] bool compact = false,
+        [Description("Server name from list_servers")] string serverName,
+        [Description("Database name from list_databases")] string databaseName,
+        [Description("Optional comma-separated schemas to include (e.g. 'dbo,sales'). Overrides excludeSchemas.")] string? includeSchemas = null,
+        [Description("Optional comma-separated schemas to exclude (e.g. 'audit,staging'). Ignored if includeSchemas set.")] string? excludeSchemas = null,
+        [Description("Optional comma-separated tables to include (e.g. 'Users,Orders'). Overrides excludeTables.")] string? includeTables = null,
+        [Description("Optional comma-separated tables to exclude. Ignored if includeTables set.")] string? excludeTables = null,
+        [Description("Max tables to include (1-200, default 50)")] int maxTables = 50,
+        [Description("true/false. Show only PK/FK columns without data types")] bool compact = false,
         CancellationToken cancellationToken = default)
     {
         maxTables = Math.Clamp(maxTables, 1, 200);

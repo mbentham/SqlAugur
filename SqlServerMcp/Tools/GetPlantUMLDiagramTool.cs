@@ -22,17 +22,17 @@ public sealed class GetPlantUMLDiagramTool
         Title = "Get Database ER Diagram",
         ReadOnly = false,
         Idempotent = false)]
-    [Description("Generate a PlantUML ER diagram for a SQL Server database. Saves PlantUML text to the specified file path showing tables, columns, primary keys, and foreign key relationships with smart cardinality.")]
+    [Description("Generate a PlantUML ER diagram saved to a file. Shows tables, columns, PKs, and FK relationships with smart cardinality.")]
     public async Task<string> GetDiagram(
-        [Description("Name of the SQL Server to query (use list_servers to see available names)")] string serverName,
-        [Description("Name of the database to diagram (use list_databases to see available databases)")] string databaseName,
-        [Description("File path to save the PlantUML diagram output (e.g. '/tmp/diagram.puml')")] string outputPath,
-        [Description("Optional comma-separated schema names to include (e.g. 'dbo,sales'). If specified, only tables in these schemas are shown. Overrides excludeSchemas.")] string? includeSchemas = null,
-        [Description("Optional comma-separated schema names to exclude (e.g. 'audit,staging'). Ignored when includeSchemas is specified.")] string? excludeSchemas = null,
-        [Description("Optional comma-separated table names to include (e.g. 'Users,Orders'). If specified, only these tables are shown. Overrides excludeTables.")] string? includeTables = null,
-        [Description("Optional comma-separated table names to exclude (e.g. 'AuditLog,TempData'). Ignored when includeTables is specified.")] string? excludeTables = null,
-        [Description("Maximum number of tables to include (1-200, default 50)")] int maxTables = 50,
-        [Description("When true, shows only primary key and foreign key columns without data types. Useful for high-level relationship maps of large databases.")] bool compact = false,
+        [Description("Server name from list_servers")] string serverName,
+        [Description("Database name from list_databases")] string databaseName,
+        [Description("File path for output (e.g. '/tmp/diagram.puml')")] string outputPath,
+        [Description("Optional comma-separated schemas to include (e.g. 'dbo,sales'). Overrides excludeSchemas.")] string? includeSchemas = null,
+        [Description("Optional comma-separated schemas to exclude (e.g. 'audit,staging'). Ignored if includeSchemas set.")] string? excludeSchemas = null,
+        [Description("Optional comma-separated tables to include (e.g. 'Users,Orders'). Overrides excludeTables.")] string? includeTables = null,
+        [Description("Optional comma-separated tables to exclude. Ignored if includeTables set.")] string? excludeTables = null,
+        [Description("Max tables to include (1-200, default 50)")] int maxTables = 50,
+        [Description("true/false. Show only PK/FK columns without data types")] bool compact = false,
         CancellationToken cancellationToken = default)
     {
         maxTables = Math.Clamp(maxTables, 1, 200);

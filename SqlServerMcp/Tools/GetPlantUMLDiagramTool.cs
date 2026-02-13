@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using SqlServerMcp.Services;
 
@@ -44,17 +43,6 @@ public sealed class GetPlantUMLDiagramTool
                 ToolHelper.ParseCommaSeparatedList(includeTables), ToolHelper.ParseCommaSeparatedList(excludeTables),
                 maxTables, cancellationToken, compact), cancellationToken);
 
-        var fullPath = Path.GetFullPath(outputPath);
-        if (!fullPath.EndsWith(".puml", StringComparison.OrdinalIgnoreCase))
-            throw new McpException("Output path must have a .puml file extension.");
-
-        var directory = Path.GetDirectoryName(fullPath);
-        if (directory is not null)
-            Directory.CreateDirectory(directory);
-
-        await File.WriteAllTextAsync(fullPath, puml, cancellationToken);
-
-        var lineCount = puml.AsSpan().Count('\n');
-        return $"PlantUML diagram saved to {fullPath} ({lineCount} lines)";
+        return await ToolHelper.SaveToFileAsync(puml, outputPath, ".puml", "PlantUML diagram", cancellationToken);
     }
 }

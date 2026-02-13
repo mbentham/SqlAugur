@@ -56,17 +56,6 @@ public sealed class SqlServerService : ISqlServerService
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
-        // Build column metadata
-        var columns = new List<Dictionary<string, string>>();
-        for (var i = 0; i < reader.FieldCount; i++)
-        {
-            columns.Add(new Dictionary<string, string>
-            {
-                ["name"] = reader.GetName(i),
-                ["type"] = reader.GetFieldType(i)?.Name ?? "Unknown"
-            });
-        }
-
         // Read rows up to MaxRows
         var rows = new List<Dictionary<string, object?>>();
         var truncated = false;
@@ -91,10 +80,7 @@ public sealed class SqlServerService : ISqlServerService
         // Build response envelope
         var response = new Dictionary<string, object?>
         {
-            ["server"] = serverName,
-            ["rowCount"] = rows.Count,
             ["truncated"] = truncated,
-            ["columns"] = columns,
             ["rows"] = rows
         };
 
@@ -111,7 +97,7 @@ public sealed class SqlServerService : ISqlServerService
         await connection.OpenAsync(cancellationToken);
 
         await using var command = new SqlCommand(
-            "SELECT name, database_id, state_desc, create_date FROM sys.databases ORDER BY name",
+            "SELECT name FROM sys.databases ORDER BY name",
             connection)
         {
             CommandTimeout = _options.CommandTimeoutSeconds
@@ -119,26 +105,13 @@ public sealed class SqlServerService : ISqlServerService
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
-        var databases = new List<Dictionary<string, object?>>();
+        var databases = new List<string>();
         while (await reader.ReadAsync(cancellationToken))
         {
-            databases.Add(new Dictionary<string, object?>
-            {
-                ["name"] = reader.GetString(0),
-                ["databaseId"] = reader.GetInt32(1),
-                ["state"] = reader.GetString(2),
-                ["createDate"] = reader.GetDateTime(3).ToString("O")
-            });
+            databases.Add(reader.GetString(0));
         }
 
-        var response = new Dictionary<string, object?>
-        {
-            ["server"] = serverName,
-            ["databaseCount"] = databases.Count,
-            ["databases"] = databases
-        };
-
-        return JsonSerializer.Serialize(response, JsonOptions);
+        return string.Join(", ", databases);
     }
 
     public Task<string> GetEstimatedPlanAsync(string serverName, string databaseName, string query, CancellationToken cancellationToken) =>
@@ -184,15 +157,7 @@ public sealed class SqlServerService : ISqlServerService
             await using var reader = await command.ExecuteReaderAsync(cancellationToken);
             var planXml = await extractPlanXml(reader, cancellationToken);
 
-            var response = new Dictionary<string, object?>
-            {
-                ["server"] = serverName,
-                ["database"] = databaseName,
-                ["planType"] = planTypeLabel,
-                ["planXml"] = planXml
-            };
-
-            return JsonSerializer.Serialize(response, JsonOptions);
+            return planXml ?? string.Empty;
         }
         finally
         {

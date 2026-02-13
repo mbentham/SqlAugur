@@ -31,17 +31,7 @@ public sealed class SqlServerServiceIntegrationTests
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
 
-        Assert.Equal(Server, root.GetProperty("server").GetString());
-        Assert.Equal(3, root.GetProperty("rowCount").GetInt32());
         Assert.False(root.GetProperty("truncated").GetBoolean());
-
-        var columns = root.GetProperty("columns");
-        Assert.Equal(3, columns.GetArrayLength());
-        Assert.Equal("ProductId", columns[0].GetProperty("name").GetString());
-        Assert.Equal("Int32", columns[0].GetProperty("type").GetString());
-        Assert.Equal("Name", columns[1].GetProperty("name").GetString());
-        Assert.Equal("Price", columns[2].GetProperty("name").GetString());
-        Assert.Equal("Decimal", columns[2].GetProperty("type").GetString());
 
         var rows = root.GetProperty("rows");
         Assert.Equal(3, rows.GetArrayLength());
@@ -75,8 +65,8 @@ public sealed class SqlServerServiceIntegrationTests
 
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
-        Assert.Equal(2, root.GetProperty("rowCount").GetInt32());
         Assert.True(root.GetProperty("truncated").GetBoolean());
+        Assert.Equal(2, root.GetProperty("rows").GetArrayLength());
     }
 
     [Fact]
@@ -115,7 +105,7 @@ public sealed class SqlServerServiceIntegrationTests
             """, CancellationToken.None);
 
         using var doc = JsonDocument.Parse(json);
-        Assert.Equal(3, doc.RootElement.GetProperty("rowCount").GetInt32());
+        Assert.Equal(3, doc.RootElement.GetProperty("rows").GetArrayLength());
     }
 
     [Fact]
@@ -155,19 +145,10 @@ public sealed class SqlServerServiceIntegrationTests
     {
         var service = ServiceFactory.CreateSqlServerService(_fixture.ConnectionString);
 
-        var json = await service.ListDatabasesAsync(Server, CancellationToken.None);
+        var result = await service.ListDatabasesAsync(Server, CancellationToken.None);
 
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-        Assert.Equal(Server, root.GetProperty("server").GetString());
-
-        var databases = root.GetProperty("databases");
-        var dbNames = new List<string>();
-        foreach (var db in databases.EnumerateArray())
-            dbNames.Add(db.GetProperty("name").GetString()!);
-
-        Assert.Contains("master", dbNames);
-        Assert.Contains(Db, dbNames);
+        Assert.Contains("master", result);
+        Assert.Contains(Db, result);
     }
 
     // ───────────────────────────────────────────────
@@ -179,17 +160,12 @@ public sealed class SqlServerServiceIntegrationTests
     {
         var service = ServiceFactory.CreateSqlServerService(_fixture.ConnectionString);
 
-        var json = await service.GetEstimatedPlanAsync(Server, Db,
+        var result = await service.GetEstimatedPlanAsync(Server, Db,
             "SELECT * FROM dbo.Products WHERE ProductId = 1",
             CancellationToken.None);
 
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-        Assert.Equal("estimated", root.GetProperty("planType").GetString());
-
-        var planXml = root.GetProperty("planXml").GetString();
-        Assert.NotNull(planXml);
-        Assert.Contains("ShowPlanXML", planXml);
+        Assert.NotEmpty(result);
+        Assert.Contains("ShowPlanXML", result);
     }
 
     [Fact]
@@ -197,16 +173,11 @@ public sealed class SqlServerServiceIntegrationTests
     {
         var service = ServiceFactory.CreateSqlServerService(_fixture.ConnectionString);
 
-        var json = await service.GetActualPlanAsync(Server, Db,
+        var result = await service.GetActualPlanAsync(Server, Db,
             "SELECT * FROM dbo.Products WHERE ProductId = 1",
             CancellationToken.None);
 
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-        Assert.Equal("actual", root.GetProperty("planType").GetString());
-
-        var planXml = root.GetProperty("planXml").GetString();
-        Assert.NotNull(planXml);
-        Assert.Contains("ShowPlanXML", planXml);
+        Assert.NotEmpty(result);
+        Assert.Contains("ShowPlanXML", result);
     }
 }

@@ -82,7 +82,7 @@ public abstract class StoredProcedureServiceBase
         try
         {
             await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-            return await FormatResultSetsAsync(reader, serverName, procedureName, cancellationToken);
+            return await FormatResultSetsAsync(reader, cancellationToken);
         }
         catch (SqlException ex) when (ex.Number == 2812)
         {
@@ -94,8 +94,6 @@ public abstract class StoredProcedureServiceBase
 
     private async Task<string> FormatResultSetsAsync(
         SqlDataReader reader,
-        string serverName,
-        string procedureName,
         CancellationToken cancellationToken)
     {
         var resultSets = new List<Dictionary<string, object?>>();
@@ -104,16 +102,6 @@ public abstract class StoredProcedureServiceBase
         {
             if (reader.FieldCount == 0)
                 continue;
-
-            var columns = new List<Dictionary<string, string>>();
-            for (var i = 0; i < reader.FieldCount; i++)
-            {
-                columns.Add(new Dictionary<string, string>
-                {
-                    ["name"] = reader.GetName(i),
-                    ["type"] = reader.GetFieldType(i)?.Name ?? "Unknown"
-                });
-            }
 
             var rows = new List<Dictionary<string, object?>>();
             var truncated = false;
@@ -137,22 +125,13 @@ public abstract class StoredProcedureServiceBase
 
             resultSets.Add(new Dictionary<string, object?>
             {
-                ["columns"] = columns,
-                ["rows"] = rows,
-                ["rowCount"] = rows.Count,
-                ["truncated"] = truncated
+                ["truncated"] = truncated,
+                ["rows"] = rows
             });
 
         } while (await reader.NextResultAsync(cancellationToken));
 
-        var response = new Dictionary<string, object?>
-        {
-            ["server"] = serverName,
-            ["procedureName"] = procedureName,
-            ["resultSets"] = resultSets
-        };
-
-        return JsonSerializer.Serialize(response, JsonOptions);
+        return JsonSerializer.Serialize(resultSets, JsonOptions);
     }
 
     protected static void AddIfNotNull(Dictionary<string, object?> parameters, string name, object? value)

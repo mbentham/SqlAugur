@@ -29,6 +29,28 @@ internal static class ToolHelper
     }
 
     /// <summary>
+    /// Saves content to a file, validating the extension, creating directories as needed,
+    /// and returning a confirmation message with the line count.
+    /// </summary>
+    public static async Task<string> SaveToFileAsync(
+        string content, string outputPath, string allowedExtension,
+        string description, CancellationToken cancellationToken)
+    {
+        var fullPath = Path.GetFullPath(outputPath);
+        if (!fullPath.EndsWith(allowedExtension, StringComparison.OrdinalIgnoreCase))
+            throw new McpException($"Output path must have a {allowedExtension} file extension.");
+
+        var directory = Path.GetDirectoryName(fullPath);
+        if (directory is not null)
+            Directory.CreateDirectory(directory);
+
+        await File.WriteAllTextAsync(fullPath, content, cancellationToken);
+
+        var lineCount = content.AsSpan().Count('\n');
+        return $"{description} saved to {fullPath} ({lineCount} lines)";
+    }
+
+    /// <summary>
     /// Parses a comma-separated string into a deduplicated list.
     /// Returns null if the input is null, empty, or contains only whitespace/commas.
     /// </summary>

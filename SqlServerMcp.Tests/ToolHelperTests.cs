@@ -43,6 +43,64 @@ public class ToolHelperTests
     }
 
     // ───────────────────────────────────────────────
+    // SaveToFileAsync
+    // ───────────────────────────────────────────────
+
+    [Fact]
+    public async Task SaveToFileAsync_ValidWrite_ReturnsConfirmation()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), $"th_{Guid.NewGuid():N}");
+        try
+        {
+            var path = Path.Combine(dir, "test.sqlplan");
+            var content = "line1\nline2\nline3";
+
+            var result = await ToolHelper.SaveToFileAsync(content, path, ".sqlplan", "Execution plan", TestContext.Current.CancellationToken);
+
+            Assert.Contains("Execution plan saved to", result);
+            Assert.Contains(Path.GetFullPath(path), result);
+            Assert.Contains("2 lines", result);
+            Assert.Equal(content, await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken));
+        }
+        finally
+        {
+            if (Directory.Exists(dir))
+                Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task SaveToFileAsync_WrongExtension_ThrowsMcpException()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "test.txt");
+
+        var ex = await Assert.ThrowsAsync<McpException>(
+            () => ToolHelper.SaveToFileAsync("content", path, ".sqlplan", "Plan", TestContext.Current.CancellationToken));
+
+        Assert.Contains(".sqlplan", ex.Message);
+    }
+
+    [Fact]
+    public async Task SaveToFileAsync_CreatesDirectory()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), $"th_{Guid.NewGuid():N}", "sub");
+        try
+        {
+            var path = Path.Combine(dir, "output.puml");
+
+            await ToolHelper.SaveToFileAsync("@startuml\n@enduml", path, ".puml", "Diagram", TestContext.Current.CancellationToken);
+
+            Assert.True(File.Exists(path));
+        }
+        finally
+        {
+            var parent = Path.GetDirectoryName(dir)!;
+            if (Directory.Exists(parent))
+                Directory.Delete(parent, recursive: true);
+        }
+    }
+
+    // ───────────────────────────────────────────────
     // ParseCommaSeparatedList
     // ───────────────────────────────────────────────
 

@@ -30,6 +30,7 @@ public sealed class QueryPlanTool
         [Description("Name of the SQL Server to query (use list_servers to see available names)")] string serverName,
         [Description("SQL SELECT query to get the execution plan for. Only SELECT and WITH (CTE) queries are permitted.")] string query,
         [Description("Name of the database to query (use list_databases to see available databases)")] string databaseName,
+        [Description("File path for output (e.g. '/tmp/plan.sqlplan')")] string outputPath,
         [Description("Plan type: 'estimated' (default, does not execute) or 'actual' (executes the query)")]
         string planType = "estimated",
         CancellationToken cancellationToken = default)
@@ -40,9 +41,11 @@ public sealed class QueryPlanTool
             throw new McpException($"Invalid planType '{planType}'. Must be 'estimated' or 'actual'.");
         }
 
-        return await ToolHelper.ExecuteAsync(_rateLimiter, () =>
+        var planXml = await ToolHelper.ExecuteAsync(_rateLimiter, () =>
             planType.Equals("actual", StringComparison.OrdinalIgnoreCase)
                 ? _sqlServerService.GetActualPlanAsync(serverName, databaseName, query, cancellationToken)
                 : _sqlServerService.GetEstimatedPlanAsync(serverName, databaseName, query, cancellationToken), cancellationToken);
+
+        return await ToolHelper.SaveToFileAsync(planXml, outputPath, ".sqlplan", "Execution plan", cancellationToken);
     }
 }

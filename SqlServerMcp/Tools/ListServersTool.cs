@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.Text.Json;
 using ModelContextProtocol.Server;
 using SqlServerMcp.Services;
 
@@ -24,6 +23,6 @@ public sealed class ListServersTool
     public string ListServers()
     {
         var servers = _sqlServerService.GetServerNames();
-        return JsonSerializer.Serialize(servers);
+        return string.Join(", ", servers);
     }
 }

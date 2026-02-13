@@ -118,13 +118,22 @@ The first run pulls `mcr.microsoft.com/mssql/server:2025-latest` (~1.5 GB). Subs
 
 ## MCP Client Setup
 
-**Recommended: published build**
+### Option 1: Install from a release (recommended)
 
-MCP clients may launch the server from an arbitrary working directory, which can prevent `dotnet run` from finding `appsettings.json`. Publishing the server to a standalone directory avoids this:
+Download a [release](https://github.com/mbentham/MCP-Server-SQLServer/releases), extract it, build, and publish:
 
 ```bash
+# Download and extract (replace vX.Y.Z with the desired version)
+gh release download vX.Y.Z --archive tar.gz
+tar xzf MCP-Server-SQLServer-vX.Y.Z.tar.gz
+cd MCP-Server-SQLServer-vX.Y.Z
+
+# Build and publish
 dotnet publish SqlServerMcp -c Release -o SqlServerMcp/publish
-cp SqlServerMcp/appsettings.json SqlServerMcp/publish/
+
+# Copy and edit your configuration
+cp SqlServerMcp/appsettings.example.json SqlServerMcp/publish/appsettings.json
+# Edit SqlServerMcp/publish/appsettings.json with your server connections
 ```
 
 Then add to your MCP client configuration (Claude Desktop, Claude Code, etc.):
@@ -140,7 +149,19 @@ Then add to your MCP client configuration (Claude Desktop, Claude Code, etc.):
 }
 ```
 
-**Alternative: dotnet run (development only)**
+### Option 2: Clone and build from source
+
+```bash
+git clone git@github.com:mbentham/MCP-Server-SQLServer.git
+cd MCP-Server-SQLServer
+dotnet publish SqlServerMcp -c Release -o SqlServerMcp/publish
+cp SqlServerMcp/appsettings.example.json SqlServerMcp/publish/appsettings.json
+# Edit SqlServerMcp/publish/appsettings.json with your server connections
+```
+
+MCP client configuration is the same as above — point `args` at the published `SqlServerMcp.dll`.
+
+### Option 3: dotnet run (development only)
 
 This works when the MCP client launches from the project directory, but may fail if the client uses a different working directory:
 

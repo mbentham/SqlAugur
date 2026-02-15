@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Added
+- Native Azure Key Vault integration — set `AzureKeyVaultUri` to load secrets as configuration values via `DefaultAzureCredential`
+- AWS Secrets Manager and HashiCorp Vault wrapper script examples in SECURITY.md
+
 ## [1.3.0] - 2026-02-14
 
 ### Added

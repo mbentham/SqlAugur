@@ -1,10 +1,13 @@
+using Azure.Extensions.AspNetCore.Configuration.Secrets;
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol.Server;
 using SqlAugur.Configuration;
-using Microsoft.Extensions.Configuration;
 using System.Reflection;
 using SqlAugur.Services;
 
@@ -13,6 +16,21 @@ var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
     Args = args,
     ContentRootPath = AppContext.BaseDirectory
 });
+
+// Azure Key Vault configuration source (loaded before user config so local files take priority)
+var keyVaultUri = builder.Configuration["SqlAugur:AzureKeyVaultUri"];
+if (!string.IsNullOrEmpty(keyVaultUri))
+{
+    if (!SqlAugurOptionsValidator.TryValidateKeyVaultUri(keyVaultUri, out var vaultUri, out var kvError))
+        throw new InvalidOperationException(kvError);
+
+    var secretClient = new SecretClient(vaultUri!, new DefaultAzureCredential(),
+        new SecretClientOptions
+        {
+            Retry = { MaxRetries = 2, NetworkTimeout = TimeSpan.FromSeconds(10) }
+        });
+    builder.Configuration.AddAzureKeyVault(secretClient, new KeyVaultSecretManager());
+}
 
 // User config directory (~/.config/sqlaugur on Linux, %APPDATA%\sqlaugur on Windows)
 var userConfigDir = Path.Combine(
@@ -111,6 +129,9 @@ foreach (var path in new[] {
     if (File.Exists(path))
         startupLogger.LogInformation("Configuration loaded from {Path}", path);
 }
+
+if (!string.IsNullOrEmpty(keyVaultUri))
+    startupLogger.LogInformation("Azure Key Vault configuration source active: {VaultUri}", keyVaultUri);
 
 var options = host.Services.GetRequiredService<IOptions<SqlAugurOptions>>().Value;
 

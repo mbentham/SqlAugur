@@ -5,6 +5,31 @@ namespace SqlAugur.Configuration;
 
 public sealed class SqlAugurOptionsValidator : IValidateOptions<SqlAugurOptions>
 {
+    internal static bool TryValidateKeyVaultUri(string? rawUri, out Uri? vaultUri, out string? error)
+    {
+        vaultUri = null;
+        error = null;
+
+        if (string.IsNullOrEmpty(rawUri))
+            return true;
+
+        if (!Uri.TryCreate(rawUri, UriKind.Absolute, out vaultUri))
+        {
+            error = $"AzureKeyVaultUri is not a valid absolute URI: '{rawUri}'.";
+            vaultUri = null;
+            return false;
+        }
+
+        if (!string.Equals(vaultUri.Scheme, "https", StringComparison.OrdinalIgnoreCase))
+        {
+            error = $"AzureKeyVaultUri must use the https scheme (got '{vaultUri.Scheme}').";
+            vaultUri = null;
+            return false;
+        }
+
+        return true;
+    }
+
     public ValidateOptionsResult Validate(string? name, SqlAugurOptions options)
     {
         var errors = new List<string>();
@@ -42,6 +67,9 @@ public sealed class SqlAugurOptionsValidator : IValidateOptions<SqlAugurOptions>
 
         if (options.MaxQueriesPerMinute < 1 || options.MaxQueriesPerMinute > 10_000)
             errors.Add($"MaxQueriesPerMinute must be between 1 and 10,000 (got {options.MaxQueriesPerMinute}).");
+
+        if (!TryValidateKeyVaultUri(options.AzureKeyVaultUri, out _, out var kvError))
+            errors.Add(kvError!);
 
         return errors.Count > 0
             ? ValidateOptionsResult.Fail(errors)

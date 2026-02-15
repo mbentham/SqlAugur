@@ -11,4 +11,5 @@ public sealed class SqlAugurOptions
     public bool EnableDarlingData { get; init; }
     public bool EnableWhoIsActive { get; init; }
     public bool EnableDynamicToolsets { get; init; }
+    public string? AzureKeyVaultUri { get; init; }
 }

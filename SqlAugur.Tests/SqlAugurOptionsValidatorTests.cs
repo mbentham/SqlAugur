@@ -4,14 +4,15 @@ namespace SqlAugur.Tests;
 
 public class SqlAugurOptionsValidatorTests
 {
-    private static SqlAugurOptions MakeValidOptions() => new()
+    private static SqlAugurOptions MakeValidOptions(string? azureKeyVaultUri = null) => new()
     {
         Servers = new Dictionary<string, SqlServerConnection>
         {
             ["prod"] = new() { ConnectionString = "Server=localhost;Database=master;Trusted_Connection=True;" }
         },
         MaxRows = 1000,
-        CommandTimeoutSeconds = 30
+        CommandTimeoutSeconds = 30,
+        AzureKeyVaultUri = azureKeyVaultUri
     };
 
     private readonly SqlAugurOptionsValidator _validator = new();
@@ -213,6 +214,126 @@ public class SqlAugurOptionsValidatorTests
         var result = _validator.Validate(null, options);
 
         Assert.Equal(shouldSucceed, result.Succeeded);
+    }
+
+    // ───────────────────────────────────────────────
+    // AzureKeyVaultUri
+    // ───────────────────────────────────────────────
+
+    [Fact]
+    public void AzureKeyVaultUri_Null_Passes()
+    {
+        var options = MakeValidOptions();
+        // AzureKeyVaultUri defaults to null
+
+        var result = _validator.Validate(null, options);
+
+        Assert.True(result.Succeeded);
+    }
+
+    [Fact]
+    public void AzureKeyVaultUri_Empty_Passes()
+    {
+        var options = MakeValidOptions(azureKeyVaultUri: "");
+
+        var result = _validator.Validate(null, options);
+
+        Assert.True(result.Succeeded);
+    }
+
+    [Fact]
+    public void AzureKeyVaultUri_ValidHttps_Passes()
+    {
+        var options = MakeValidOptions(azureKeyVaultUri: "https://myvault.vault.azure.net/");
+
+        var result = _validator.Validate(null, options);
+
+        Assert.True(result.Succeeded);
+    }
+
+    [Fact]
+    public void AzureKeyVaultUri_HttpScheme_Fails()
+    {
+        var options = MakeValidOptions(azureKeyVaultUri: "http://myvault.vault.azure.net/");
+
+        var result = _validator.Validate(null, options);
+
+        Assert.True(result.Failed);
+        Assert.Contains("https", result.FailureMessage);
+    }
+
+    [Fact]
+    public void AzureKeyVaultUri_Malformed_Fails()
+    {
+        var options = MakeValidOptions(azureKeyVaultUri: "not a uri");
+
+        var result = _validator.Validate(null, options);
+
+        Assert.True(result.Failed);
+        Assert.Contains("AzureKeyVaultUri", result.FailureMessage);
+    }
+
+    [Fact]
+    public void AzureKeyVaultUri_Relative_Fails()
+    {
+        var options = MakeValidOptions(azureKeyVaultUri: "/relative/path");
+
+        var result = _validator.Validate(null, options);
+
+        Assert.True(result.Failed);
+        Assert.Contains("AzureKeyVaultUri", result.FailureMessage);
+    }
+
+    // ───────────────────────────────────────────────
+    // TryValidateKeyVaultUri (shared helper)
+    // ───────────────────────────────────────────────
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void TryValidateKeyVaultUri_NullOrEmpty_ReturnsTrue(string? input)
+    {
+        var result = SqlAugurOptionsValidator.TryValidateKeyVaultUri(input, out var uri, out var error);
+
+        Assert.True(result);
+        Assert.Null(uri);
+        Assert.Null(error);
+    }
+
+    [Fact]
+    public void TryValidateKeyVaultUri_ValidHttps_ReturnsTrueWithUri()
+    {
+        var result = SqlAugurOptionsValidator.TryValidateKeyVaultUri(
+            "https://myvault.vault.azure.net/", out var uri, out var error);
+
+        Assert.True(result);
+        Assert.NotNull(uri);
+        Assert.Equal("https", uri!.Scheme);
+        Assert.Null(error);
+    }
+
+    [Fact]
+    public void TryValidateKeyVaultUri_HttpScheme_ReturnsFalse()
+    {
+        var result = SqlAugurOptionsValidator.TryValidateKeyVaultUri(
+            "http://myvault.vault.azure.net/", out var uri, out var error);
+
+        Assert.False(result);
+        Assert.Null(uri);
+        Assert.NotNull(error);
+        Assert.Contains("https", error!);
+    }
+
+    [Fact]
+    public void TryValidateKeyVaultUri_Malformed_ReturnsFalse()
+    {
+        var result = SqlAugurOptionsValidator.TryValidateKeyVaultUri(
+            "not a uri", out var uri, out var error);
+
+        Assert.False(result);
+        Assert.Null(uri);
+        Assert.NotNull(error);
+        Assert.Contains("AzureKeyVaultUri", error!);
     }
 
     // ───────────────────────────────────────────────

@@ -64,10 +64,46 @@ When Windows Authentication or Managed Identity are not available, follow these 
    > **Note:** Some MCP clients (e.g., Claude Desktop) support `${ENV_VAR}` substitution syntax in their own configuration files, but this is **not a .NET feature** — .NET's `IConfiguration` system does not resolve `${...}` placeholders in values. Do not rely on this syntax in `appsettings.json`. Use the `__` environment variable override pattern shown above, or inject credentials through your MCP client's own environment variable support.
 
 3. **Use secure credential stores:**
-   - **Azure Key Vault** — for Azure deployments, integrate with `Azure.Extensions.AspNetCore.Configuration.Secrets`
-   - **AWS Secrets Manager** — for AWS deployments, use the AWS SDK to retrieve secrets
-   - **HashiCorp Vault** — for on-premises, use Vault for centralized secrets management
-   - **Windows Credential Manager** — for local development on Windows
+
+   **Azure Key Vault** — native integration is built in. Set `AzureKeyVaultUri` in your `appsettings.json` to your vault URI:
+
+   ```json
+   {
+     "SqlAugur": {
+       "AzureKeyVaultUri": "https://myvault.vault.azure.net/"
+     }
+   }
+   ```
+
+   Then store connection strings as Key Vault secrets. For example, a secret named `SqlAugur--Servers--production--ConnectionString` would map to the connection string for a server named 'production'
+
+   Authentication uses [`DefaultAzureCredential`](https://learn.microsoft.com/en-us/dotnet/api/azure.identity.defaultazurecredential), which automatically tries Managed Identity, Azure CLI, Visual Studio, environment variables, and other methods in order. No additional authentication configuration is needed in most environments.
+
+   **AWS Secrets Manager** — use a wrapper script to inject credentials via environment variables before starting SqlAugur:
+
+   ```bash
+   #!/usr/bin/env bash
+   export SqlAugur__Servers__production__ConnectionString=$(
+     aws secretsmanager get-secret-value \
+       --secret-id sqlaugur/production \
+       --query SecretString --output text
+   )
+   exec sqlaugur "$@"
+   ```
+
+   **HashiCorp Vault** — use a wrapper script to inject credentials via environment variables before starting SqlAugur:
+
+   ```bash
+   #!/usr/bin/env bash
+   export SqlAugur__Servers__production__ConnectionString=$(
+     vault kv get -field=connection_string secret/sqlaugur/production
+   )
+   exec sqlaugur "$@"
+   ```
+
+   Point your MCP client at the wrapper script instead of `sqlaugur` directly.
+
+   **Windows Credential Manager** — for local development on Windows
 
 4. **Use strong passwords** — use a password manager to generate a long (30+ characters), random password. A random password of this length naturally satisfies Windows complexity requirements. Keep [`CHECK_POLICY`](https://learn.microsoft.com/en-us/sql/relational-databases/security/password-policy) and `CHECK_EXPIRATION` enabled on the SQL login (the SQL Server defaults) to enforce complexity and rotation at the server level.
 

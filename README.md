@@ -215,7 +215,8 @@ The server loads configuration from multiple sources. Higher-priority sources ov
 2. **Environment variables** — using `__` as section delimiter (e.g., `SqlAugur__Servers__production__ConnectionString=...`)
 3. **Current working directory** — `appsettings.json` in the directory you run the command from
 4. **User config directory** — `~/.config/sqlaugur/appsettings.json` on Linux, `%APPDATA%\sqlaugur\appsettings.json` on Windows
-5. **App directory** — `appsettings.json` next to the DLL
+5. **Azure Key Vault** — when `AzureKeyVaultUri` is set (see below)
+6. **App directory** — `appsettings.json` next to the DLL
 
 **Example configuration (Windows Authentication — recommended):**
 
@@ -250,6 +251,7 @@ The server loads configuration from multiple sources. Higher-priority sources ov
 | `EnableDarlingData` | false | Enable DarlingData diagnostic tools (sp_PressureDetector, sp_QuickieStore, sp_HealthParser, sp_LogHunter, sp_HumanEventsBlockViewer, sp_IndexCleanup, sp_QueryReproBuilder) |
 | `EnableWhoIsActive` | false | Enable sp_WhoIsActive session monitoring |
 | `EnableDynamicToolsets` | false | Enable progressive tool discovery — DBA tools load on demand via 3 meta-tools instead of at startup. Reduces initial context window usage. The `Enable*` flags still control which toolsets are allowed. |
+| `AzureKeyVaultUri` | — | Azure Key Vault URI (e.g., `https://myvault.vault.azure.net/`). When set, secrets from the vault are added as a configuration source using [`DefaultAzureCredential`](https://learn.microsoft.com/en-us/dotnet/api/azure.identity.defaultazurecredential). Key Vault secret names use `--` as a section separator (e.g., a secret named `SqlAugur--Servers--prod--ConnectionString` maps to `SqlAugur:Servers:prod:ConnectionString`). |
 
 > **Security Note:** `appsettings.json` is gitignored to prevent accidental credential commits. See [SECURITY.md](SECURITY.md) for recommended authentication methods including Windows Authentication, Azure Managed Identity, and secure credential storage options.
 

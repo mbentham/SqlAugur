@@ -23,13 +23,15 @@
 
 ## Quick Start
 
+Prerequisite: [.NET 10.0 runtime](https://dotnet.microsoft.com/download)
+
 **1. Install**
 
 ```bash
 dotnet tool install -g SqlAugur
 ```
 
-**2. Configure** — create `~/.config/sqlaugur/appsettings.json` (Linux/macOS) or `%APPDATA%\sqlaugur\appsettings.json` (Windows):
+**2. Configure** — create `~/.config/sqlaugur/appsettings.json` (Linux/macOS) or `%APPDATA%\sqlaugur\appsettings.json` (Windows), setting the connection string for your environment:
 
 ```json
 {
@@ -43,17 +45,65 @@ dotnet tool install -g SqlAugur
 }
 ```
 
-**3. Connect** — add to your MCP client (Claude Desktop, Claude Code, VS Code, etc.):
+**3. Connect** — add to your MCP client:
+
+<details open>
+<summary><strong>Claude Desktop</strong></summary>
+
+Add to your [Claude Desktop config](https://modelcontextprotocol.io/quickstart/user) (`claude_desktop_config.json`):
 
 ```json
 {
   "mcpServers": {
-    "sqlserver": {
+    "sqlaugur": {
       "command": "sqlaugur"
     }
   }
 }
 ```
+
+</details>
+
+<details>
+<summary><strong>Claude Code</strong></summary>
+
+```bash
+claude mcp add --transport stdio sqlaugur -- sqlaugur
+```
+
+Or add to `.mcp.json` in your project root:
+
+```json
+{
+  "mcpServers": {
+    "sqlaugur": {
+      "type": "stdio",
+      "command": "sqlaugur"
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><strong>VS Code / Copilot</strong></summary>
+
+Add to `.vscode/mcp.json` in your workspace:
+
+```json
+{
+  "servers": {
+    "sqlaugur": {
+      "command": "sqlaugur"
+    }
+  }
+}
+```
+
+</details>
+
+**4. Verify** — ask your AI assistant to `list_servers` and you should see your configured connection.
 
 For Docker, Podman, and other install methods, see [Installation](#installation).
 

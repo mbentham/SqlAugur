@@ -4,7 +4,7 @@ COPY SqlAugur.slnx .
 COPY SqlAugur/SqlAugur.csproj SqlAugur/
 RUN dotnet restore SqlAugur/SqlAugur.csproj
 COPY SqlAugur/ SqlAugur/
-RUN dotnet publish SqlAugur/SqlAugur.csproj -c Release -o /app/publish --no-restore
+RUN dotnet publish SqlAugur/SqlAugur.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/runtime:10.0 AS final
 WORKDIR /app

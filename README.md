@@ -179,7 +179,7 @@ To update: `dotnet tool update -g SqlAugur`
 ```bash
 # Volume-mount a config file
 docker run -i --rm \
-  -v /path/to/appsettings.json:/app/appsettings.json:ro \
+  -v /path/to/appsettings.json:/app/appsettings.json:ro,Z \
   ghcr.io/mbentham/sqlaugur:latest
 
 # Or use environment variables (no config file needed)
@@ -188,7 +188,7 @@ docker run -i --rm \
   ghcr.io/mbentham/sqlaugur:latest
 ```
 
-> **Note:** To reach a SQL Server on the host machine, use `host.docker.internal` (Docker Desktop) or `--network=host` (Linux). Replace `docker` with `podman` — all commands are identical.
+> **Note:** To reach a SQL Server on the host machine, use `host.docker.internal` (Docker Desktop) or `--network=host` (Linux). Replace `docker` with `podman` — all commands are identical. The `:Z` flag on volume mounts is required for SELinux-enabled systems (Fedora, RHEL); Docker Desktop users on macOS/Windows can omit it.
 
 MCP client configuration:
 
@@ -198,7 +198,7 @@ MCP client configuration:
     "sqlserver": {
       "command": "docker",
       "args": ["run", "-i", "--rm",
-        "-v", "/path/to/appsettings.json:/app/appsettings.json:ro",
+        "-v", "/path/to/appsettings.json:/app/appsettings.json:ro,Z",
         "ghcr.io/mbentham/sqlaugur:latest"]
     }
   }
@@ -214,7 +214,7 @@ services:
     image: ghcr.io/mbentham/sqlaugur:latest
     stdin_open: true
     volumes:
-      - ./appsettings.json:/app/appsettings.json:ro
+      - ./appsettings.json:/app/appsettings.json:ro,Z
 ```
 
 MCP client configuration:

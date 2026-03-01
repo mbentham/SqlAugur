@@ -107,7 +107,7 @@ public class DarlingDataServiceTests
     public async Task PressureDetector_UnknownServer_ThrowsArgumentException()
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ExecutePressureDetectorAsync("nonexistent", null, null, null, null, null, null, null, null, null, null, CancellationToken.None));
+            _service.ExecutePressureDetectorAsync("nonexistent", null, null, null, null, null, null, null, null, null, null, null, null, CancellationToken.None));
         Assert.Contains("nonexistent", ex.Message);
         Assert.Contains("list_servers", ex.Message);
     }
@@ -116,7 +116,7 @@ public class DarlingDataServiceTests
     public async Task QuickieStore_UnknownServer_ThrowsArgumentException()
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ExecuteQuickieStoreAsync("bad", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, CancellationToken.None));
+            _service.ExecuteQuickieStoreAsync("bad", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, CancellationToken.None));
         Assert.Contains("bad", ex.Message);
     }
 
@@ -124,7 +124,7 @@ public class DarlingDataServiceTests
     public async Task HealthParser_UnknownServer_ThrowsArgumentException()
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ExecuteHealthParserAsync("bad", null, null, null, null, null, null, null, null, null, CancellationToken.None));
+            _service.ExecuteHealthParserAsync("bad", null, null, null, null, null, null, null, null, null, null, null, null, null, CancellationToken.None));
         Assert.Contains("bad", ex.Message);
     }
 
@@ -132,7 +132,7 @@ public class DarlingDataServiceTests
     public async Task LogHunter_UnknownServer_ThrowsArgumentException()
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ExecuteLogHunterAsync("bad", null, null, null, null, null, null, CancellationToken.None));
+            _service.ExecuteLogHunterAsync("bad", null, null, null, null, null, null, null, null, CancellationToken.None));
         Assert.Contains("bad", ex.Message);
     }
 
@@ -140,7 +140,7 @@ public class DarlingDataServiceTests
     public async Task HumanEventsBlockViewer_UnknownServer_ThrowsArgumentException()
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ExecuteHumanEventsBlockViewerAsync("bad", null, null, null, null, null, null, null, CancellationToken.None));
+            _service.ExecuteHumanEventsBlockViewerAsync("bad", null, null, null, null, null, null, null, null, null, null, CancellationToken.None));
         Assert.Contains("bad", ex.Message);
     }
 
@@ -148,7 +148,7 @@ public class DarlingDataServiceTests
     public async Task IndexCleanup_UnknownServer_ThrowsArgumentException()
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ExecuteIndexCleanupAsync("bad", null, null, null, null, null, null, null, null, null, CancellationToken.None));
+            _service.ExecuteIndexCleanupAsync("bad", null, null, null, null, null, null, null, null, null, null, null, CancellationToken.None));
         Assert.Contains("bad", ex.Message);
     }
 
@@ -156,7 +156,7 @@ public class DarlingDataServiceTests
     public async Task QueryReproBuilder_UnknownServer_ThrowsArgumentException()
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ExecuteQueryReproBuilderAsync("bad", null, null, null, null, null, null, null, null, null, null, null, CancellationToken.None));
+            _service.ExecuteQueryReproBuilderAsync("bad", null, null, null, null, null, null, null, null, null, null, null, null, null, null, CancellationToken.None));
         Assert.Contains("bad", ex.Message);
     }
 

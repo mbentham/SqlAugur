@@ -43,12 +43,21 @@ public sealed class HealthParserTool
         bool? skipLocks = null,
         [Description("Threshold for pending task warnings")]
         int? pendingTaskThreshold = null,
+        [Description("Include XML query plan columns in output (excluded by default to reduce response size)")]
+        bool? includeQueryPlans = null,
+        [Description("Include XML deadlock graph and report columns (excluded by default to reduce response size)")]
+        bool? includeXmlReports = null,
+        [Description("Return all columns and full-length values with no truncation")]
+        bool? verbose = null,
+        [Description("Maximum number of rows to return per result set")]
+        int? maxRows = null,
         CancellationToken cancellationToken = default)
     {
         return await ToolHelper.ExecuteAsync(_rateLimiter, () =>
             _darlingDataService.ExecuteHealthParserAsync(
                 serverName, whatToCheck, startDate, endDate, warningsOnly,
                 databaseName, waitDurationMs, waitRoundIntervalMinutes,
-                skipLocks, pendingTaskThreshold, cancellationToken), cancellationToken);
+                skipLocks, pendingTaskThreshold,
+                includeQueryPlans, includeXmlReports, verbose, maxRows, cancellationToken), cancellationToken);
     }
 }

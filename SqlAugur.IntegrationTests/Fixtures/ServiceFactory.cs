@@ -49,4 +49,36 @@ internal static class ServiceFactory
         var options = Options.Create(BuildOptions(connectionString));
         return new SchemaExplorationService(options, NullLogger<SchemaExplorationService>.Instance);
     }
+
+    internal static TestableStoredProcedureService CreateTestableService(string connectionString, int maxRows = 1000)
+    {
+        // Stored procedure lives in McpTestDb, so we need to target that database
+        var builder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connectionString)
+        {
+            InitialCatalog = SqlServerContainerFixture.TestDatabaseName
+        };
+        var options = Options.Create(BuildOptions(builder.ConnectionString, maxRows));
+        return new TestableStoredProcedureService(options);
+    }
+}
+
+internal sealed class TestableStoredProcedureService : StoredProcedureServiceBase
+{
+    private static readonly HashSet<string> Allowed = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "usp_FormatResultSetsTest"
+    };
+
+    public TestableStoredProcedureService(IOptions<SqlAugurOptions> options)
+        : base(options, NullLogger.Instance, Allowed, [],
+            "blocked for testing", "test procedure not found")
+    {
+    }
+
+    public Task<string> CallExecuteProcedureAsync(
+        string serverName, string procedureName,
+        Dictionary<string, object?> parameters,
+        ResultSetFormatOptions? formatOptions,
+        CancellationToken cancellationToken)
+        => ExecuteProcedureAsync(serverName, procedureName, parameters, formatOptions, cancellationToken);
 }

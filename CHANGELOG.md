@@ -6,9 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-03-01
+
+### Added
+- Response size optimisations for DBA diagnostic tools — per-tool column exclusion, column truncation, and smart parameter defaults reduce response sizes by 90–99% while preserving full data access via `includeQueryPlans`/`includeXmlReports`/`verbose` flags
+- `maxRows` parameter for tools with variable-length output (sp_BlitzIndex, sp_BlitzLock, sp_HealthParser, sp_LogHunter, sp_IndexCleanup, sp_QueryReproBuilder)
+- Glama directory listing with `glama.json`
+
+### Fixed
+- sp_HealthParser `query_plan` columns now excluded by default and respect the `includeQueryPlans` parameter
+- Double-prefixed metric columns in sp_QuickieStore output (e.g. `min_min_spills`) caused by duplicate entries with baked-in prefixes
+- Simplified `BuildBlitzOptions` to use a single return path matching the pattern of other format option builders
+
+## [1.3.1] - 2026-02-18
+
 ### Added
 - Native Azure Key Vault integration — set `AzureKeyVaultUri` to load secrets as configuration values via `DefaultAzureCredential`
 - AWS Secrets Manager and HashiCorp Vault wrapper script examples in SECURITY.md
+- MCP Registry `server.json` for official registry publishing
+
+### Fixed
+- Dockerfile `dotnet publish` missing restore step
+- Added `:Z` flag to volume-mount examples for SELinux compatibility (Fedora, RHEL)
 
 ## [1.3.0] - 2026-02-14
 
@@ -70,7 +89,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - Integration tests with Testcontainers and Podman (SQL Server 2025)
 - Security guide (SECURITY.md) with credential management and SQL account hardening
 
-[Unreleased]: https://github.com/mbentham/SqlAugur/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/mbentham/SqlAugur/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/mbentham/SqlAugur/compare/v1.3.1...v1.4.0
+[1.3.1]: https://github.com/mbentham/SqlAugur/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/mbentham/SqlAugur/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/mbentham/SqlAugur/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/mbentham/SqlAugur/compare/v1.0.1...v1.1.0

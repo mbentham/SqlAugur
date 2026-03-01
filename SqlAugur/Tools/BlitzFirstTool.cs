@@ -35,6 +35,12 @@ public sealed class BlitzFirstTool
         bool? sinceStartup = null,
         [Description("Threshold in ms for flagging file latency issues (default 100)")]
         int? fileLatencyThresholdMs = null,
+        [Description("Include XML query plan columns in output (excluded by default to reduce response size)")]
+        bool? includeQueryPlans = null,
+        [Description("Return all columns and full-length values with no truncation")]
+        bool? verbose = null,
+        [Description("Comma-separated list of result sets to return in expert mode (e.g. '1,2,4'). Use to limit output size.")]
+        string? resultSets = null,
         CancellationToken cancellationToken = default)
     {
         if (seconds.HasValue)
@@ -43,6 +49,7 @@ public sealed class BlitzFirstTool
         return await ToolHelper.ExecuteAsync(_rateLimiter, () =>
             _frkService.ExecuteBlitzFirstAsync(
                 serverName, seconds, expertMode, showSleepingSpids,
-                sinceStartup, fileLatencyThresholdMs, cancellationToken), cancellationToken);
+                sinceStartup, fileLatencyThresholdMs,
+                includeQueryPlans, verbose, resultSets, cancellationToken), cancellationToken);
     }
 }

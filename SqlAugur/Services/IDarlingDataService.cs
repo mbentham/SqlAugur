@@ -14,6 +14,8 @@ public interface IDarlingDataService
         int? sampleSeconds,
         bool? troubleshootBlocking,
         bool? gimmeDanger,
+        bool? includeQueryPlans,
+        bool? verbose,
         CancellationToken cancellationToken);
 
     Task<string> ExecuteQuickieStoreAsync(
@@ -38,6 +40,9 @@ public interface IDarlingDataService
         bool? expertMode,
         bool? formatOutput,
         bool? getAllDatabases,
+        bool? includeQueryPlans,
+        bool? verboseMetrics,
+        bool? verbose,
         CancellationToken cancellationToken);
 
     Task<string> ExecuteHealthParserAsync(
@@ -51,6 +56,10 @@ public interface IDarlingDataService
         int? waitRoundIntervalMinutes,
         bool? skipLocks,
         int? pendingTaskThreshold,
+        bool? includeQueryPlans,
+        bool? includeXmlReports,
+        bool? verbose,
+        int? maxRows,
         CancellationToken cancellationToken);
 
     Task<string> ExecuteLogHunterAsync(
@@ -61,6 +70,8 @@ public interface IDarlingDataService
         string? customMessage,
         bool? customMessageOnly,
         bool? firstLogOnly,
+        bool? verbose,
+        int? maxRows,
         CancellationToken cancellationToken);
 
     Task<string> ExecuteHumanEventsBlockViewerAsync(
@@ -72,6 +83,9 @@ public interface IDarlingDataService
         string? databaseName,
         string? objectName,
         int? maxBlockingEvents,
+        bool? includeQueryPlans,
+        bool? includeXmlReports,
+        bool? verbose,
         CancellationToken cancellationToken);
 
     Task<string> ExecuteIndexCleanupAsync(
@@ -85,6 +99,8 @@ public interface IDarlingDataService
         int? minRows,
         bool? dedupeOnly,
         bool? getAllDatabases,
+        bool? verbose,
+        int? maxRows,
         CancellationToken cancellationToken);
 
     Task<string> ExecuteQueryReproBuilderAsync(
@@ -100,5 +116,8 @@ public interface IDarlingDataService
         string? procedureName,
         string? queryTextSearch,
         string? queryTextSearchNot,
+        bool? includeQueryPlans,
+        bool? verbose,
+        int? maxRows,
         CancellationToken cancellationToken);
 }

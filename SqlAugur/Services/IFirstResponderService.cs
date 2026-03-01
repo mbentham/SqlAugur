@@ -8,6 +8,8 @@ public interface IFirstResponderService
         bool? checkServerInfo,
         int? ignorePrioritiesAbove,
         bool? bringThePain,
+        bool? includeQueryPlans,
+        bool? verbose,
         CancellationToken cancellationToken);
 
     Task<string> ExecuteBlitzFirstAsync(
@@ -17,6 +19,9 @@ public interface IFirstResponderService
         bool? showSleepingSpids,
         bool? sinceStartup,
         int? fileLatencyThresholdMs,
+        bool? includeQueryPlans,
+        bool? verbose,
+        string? resultSets,
         CancellationToken cancellationToken);
 
     Task<string> ExecuteBlitzCacheAsync(
@@ -27,6 +32,8 @@ public interface IFirstResponderService
         string? databaseName,
         string? slowlySearchPlansFor,
         bool? exportToExcel,
+        bool? includeQueryPlans,
+        bool? verbose,
         CancellationToken cancellationToken);
 
     Task<string> ExecuteBlitzIndexAsync(
@@ -38,6 +45,9 @@ public interface IFirstResponderService
         int? mode,
         int? thresholdMb,
         int? filter,
+        bool? includeQueryPlans,
+        bool? verbose,
+        int? maxRows,
         CancellationToken cancellationToken);
 
     Task<string> ExecuteBlitzWhoAsync(
@@ -52,6 +62,8 @@ public interface IFirstResponderService
         bool? showActualParameters,
         bool? getLiveQueryPlan,
         string? sortOrder,
+        bool? includeQueryPlans,
+        bool? verbose,
         CancellationToken cancellationToken);
 
     Task<string> ExecuteBlitzLockAsync(
@@ -66,5 +78,10 @@ public interface IFirstResponderService
         string? loginName,
         bool? victimsOnly,
         string? eventSessionName,
+        bool? includeQueryPlans,
+        bool? includeXmlReports,
+        bool? verbose,
+        int? daysBack,
+        int? maxRows,
         CancellationToken cancellationToken);
 }

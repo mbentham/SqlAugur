@@ -47,12 +47,22 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         int? sampleSeconds,
         bool? troubleshootBlocking,
         bool? gimmeDanger,
+        bool? includeQueryPlans,
+        bool? verbose,
         CancellationToken cancellationToken)
     {
         var parameters = new Dictionary<string, object?>();
         AddIfNotNull(parameters, "@what_to_check", whatToCheck);
         AddBoolParam(parameters, "@skip_queries", skipQueries);
-        AddBoolParam(parameters, "@skip_plan_xml", skipPlanXml);
+
+        // Default: skip plan XML unless explicitly requested
+        if (includeQueryPlans == true)
+            AddBoolParam(parameters, "@skip_plan_xml", skipPlanXml ?? false);
+        else if (!skipPlanXml.HasValue)
+            parameters["@skip_plan_xml"] = 1;
+        else
+            AddBoolParam(parameters, "@skip_plan_xml", skipPlanXml);
+
         AddIfNotNull(parameters, "@minimum_disk_latency_ms", minimumDiskLatencyMs);
         AddIfNotNull(parameters, "@cpu_utilization_threshold", cpuUtilizationThreshold);
         AddBoolParam(parameters, "@skip_waits", skipWaits);
@@ -61,7 +71,8 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         AddBoolParam(parameters, "@troubleshoot_blocking", troubleshootBlocking);
         AddBoolParam(parameters, "@gimme_danger", gimmeDanger);
 
-        return await ExecuteProcedureAsync(serverName, "sp_PressureDetector", parameters, cancellationToken);
+        var formatOptions = BuildPressureDetectorOptions(includeQueryPlans, verbose);
+        return await ExecuteProcedureAsync(serverName, "sp_PressureDetector", parameters, formatOptions, cancellationToken);
     }
 
     public async Task<string> ExecuteQuickieStoreAsync(
@@ -86,6 +97,9 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         bool? expertMode,
         bool? formatOutput,
         bool? getAllDatabases,
+        bool? includeQueryPlans,
+        bool? verboseMetrics,
+        bool? verbose,
         CancellationToken cancellationToken)
     {
         var parameters = new Dictionary<string, object?>();
@@ -107,10 +121,12 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         AddIfNotNull(parameters, "@wait_filter", waitFilter);
         AddIfNotNull(parameters, "@query_type", queryType);
         AddBoolParam(parameters, "@expert_mode", expertMode);
-        AddBoolParam(parameters, "@format_output", formatOutput);
+        AddBoolParam(parameters, "@format_output", formatOutput ?? false);
         AddBoolParam(parameters, "@get_all_databases", getAllDatabases);
+        parameters["@hide_help_table"] = 1;
 
-        return await ExecuteProcedureAsync(serverName, "sp_QuickieStore", parameters, cancellationToken);
+        var formatOptions = BuildQuickieStoreOptions(includeQueryPlans, verboseMetrics, verbose);
+        return await ExecuteProcedureAsync(serverName, "sp_QuickieStore", parameters, formatOptions, cancellationToken);
     }
 
     public async Task<string> ExecuteHealthParserAsync(
@@ -124,6 +140,10 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         int? waitRoundIntervalMinutes,
         bool? skipLocks,
         int? pendingTaskThreshold,
+        bool? includeQueryPlans,
+        bool? includeXmlReports,
+        bool? verbose,
+        int? maxRows,
         CancellationToken cancellationToken)
     {
         var parameters = new Dictionary<string, object?>();
@@ -137,7 +157,8 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         AddBoolParam(parameters, "@skip_locks", skipLocks);
         AddIfNotNull(parameters, "@pending_task_threshold", pendingTaskThreshold);
 
-        return await ExecuteProcedureAsync(serverName, "sp_HealthParser", parameters, cancellationToken);
+        var formatOptions = BuildHealthParserOptions(includeQueryPlans, includeXmlReports, verbose, maxRows);
+        return await ExecuteProcedureAsync(serverName, "sp_HealthParser", parameters, formatOptions, cancellationToken);
     }
 
     public async Task<string> ExecuteLogHunterAsync(
@@ -148,17 +169,20 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         string? customMessage,
         bool? customMessageOnly,
         bool? firstLogOnly,
+        bool? verbose,
+        int? maxRows,
         CancellationToken cancellationToken)
     {
         var parameters = new Dictionary<string, object?>();
-        AddIfNotNull(parameters, "@days_back", daysBack);
+        AddIfNotNull(parameters, "@days_back", daysBack ?? -3);
         AddIfNotNull(parameters, "@start_date", startDate);
         AddIfNotNull(parameters, "@end_date", endDate);
         AddIfNotNull(parameters, "@custom_message", customMessage);
         AddBoolParam(parameters, "@custom_message_only", customMessageOnly);
-        AddBoolParam(parameters, "@first_log_only", firstLogOnly);
+        AddBoolParam(parameters, "@first_log_only", firstLogOnly ?? true);
 
-        return await ExecuteProcedureAsync(serverName, "sp_LogHunter", parameters, cancellationToken);
+        var formatOptions = BuildLogHunterOptions(verbose, maxRows);
+        return await ExecuteProcedureAsync(serverName, "sp_LogHunter", parameters, formatOptions, cancellationToken);
     }
 
     public async Task<string> ExecuteHumanEventsBlockViewerAsync(
@@ -170,6 +194,9 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         string? databaseName,
         string? objectName,
         int? maxBlockingEvents,
+        bool? includeQueryPlans,
+        bool? includeXmlReports,
+        bool? verbose,
         CancellationToken cancellationToken)
     {
         var parameters = new Dictionary<string, object?>();
@@ -181,7 +208,8 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         AddIfNotNull(parameters, "@object_name", objectName);
         AddIfNotNull(parameters, "@max_blocking_events", maxBlockingEvents);
 
-        return await ExecuteProcedureAsync(serverName, "sp_HumanEventsBlockViewer", parameters, cancellationToken);
+        var formatOptions = BuildHumanEventsBlockViewerOptions(includeQueryPlans, includeXmlReports, verbose);
+        return await ExecuteProcedureAsync(serverName, "sp_HumanEventsBlockViewer", parameters, formatOptions, cancellationToken);
     }
 
     public async Task<string> ExecuteIndexCleanupAsync(
@@ -195,6 +223,8 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         int? minRows,
         bool? dedupeOnly,
         bool? getAllDatabases,
+        bool? verbose,
+        int? maxRows,
         CancellationToken cancellationToken)
     {
         var parameters = new Dictionary<string, object?>();
@@ -208,7 +238,8 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         AddBoolParam(parameters, "@dedupe_only", dedupeOnly);
         AddBoolParam(parameters, "@get_all_databases", getAllDatabases);
 
-        return await ExecuteProcedureAsync(serverName, "sp_IndexCleanup", parameters, cancellationToken);
+        var formatOptions = BuildIndexCleanupOptions(verbose, maxRows);
+        return await ExecuteProcedureAsync(serverName, "sp_IndexCleanup", parameters, formatOptions, cancellationToken);
     }
 
     public async Task<string> ExecuteQueryReproBuilderAsync(
@@ -224,6 +255,9 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         string? procedureName,
         string? queryTextSearch,
         string? queryTextSearchNot,
+        bool? includeQueryPlans,
+        bool? verbose,
+        int? maxRows,
         CancellationToken cancellationToken)
     {
         var parameters = new Dictionary<string, object?>();
@@ -239,6 +273,192 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         AddIfNotNull(parameters, "@query_text_search", queryTextSearch);
         AddIfNotNull(parameters, "@query_text_search_not", queryTextSearchNot);
 
-        return await ExecuteProcedureAsync(serverName, "sp_QueryReproBuilder", parameters, cancellationToken);
+        var formatOptions = BuildQueryReproBuilderOptions(includeQueryPlans, verbose, maxRows);
+        return await ExecuteProcedureAsync(serverName, "sp_QueryReproBuilder", parameters, formatOptions, cancellationToken);
+    }
+
+    // ───────────────────────────────────────────────
+    // Format option factories (internal static for testability)
+    // ───────────────────────────────────────────────
+
+    internal static ResultSetFormatOptions BuildPressureDetectorOptions(bool? includeQueryPlans, bool? verbose)
+    {
+        if (verbose == true)
+            return new ResultSetFormatOptions { MaxStringLength = int.MaxValue };
+
+        var excluded = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            { "query_plan", "live_query_plan" };
+
+        if (includeQueryPlans == true)
+        {
+            excluded.Remove("query_plan");
+            excluded.Remove("live_query_plan");
+        }
+
+        return new ResultSetFormatOptions
+        {
+            ExcludedColumns = excluded,
+            TruncatedColumns = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["sql_text"] = 1000,
+                ["tempdb_info"] = 2000
+            }
+        };
+    }
+
+    internal static ResultSetFormatOptions BuildQuickieStoreOptions(bool? includeQueryPlans, bool? verboseMetrics, bool? verbose)
+    {
+        if (verbose == true)
+            return new ResultSetFormatOptions { MaxStringLength = int.MaxValue };
+
+        var excluded = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "query_plan" };
+
+        if (includeQueryPlans == true)
+            excluded.Remove("query_plan");
+
+        if (verboseMetrics != true)
+        {
+            // Exclude known min/max/total metric columns
+            foreach (var prefix in new[] { "min_", "max_", "total_" })
+            {
+                foreach (var metric in new[]
+                {
+                    "grant_kb", "used_grant_kb", "ideal_grant_kb",
+                    "reserved_threads", "used_threads",
+                    "columnstore_segment_reads", "columnstore_segment_skips",
+                    "spills", "grant_mb", "used_grant_mb"
+                })
+                {
+                    excluded.Add(prefix + metric);
+                }
+
+                foreach (var metric in new[]
+                {
+                    "duration_ms", "cpu_time_ms", "logical_io_reads",
+                    "logical_io_writes", "physical_io_reads", "clr_time_ms",
+                    "query_used_memory", "rowcount", "log_bytes_used",
+                    "tempdb_space_used"
+                })
+                {
+                    excluded.Add(prefix + metric);
+                }
+            }
+        }
+
+        return new ResultSetFormatOptions
+        {
+            ExcludedColumns = excluded,
+            TruncatedColumns = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["query_sql_text"] = 1000
+            }
+        };
+    }
+
+    internal static ResultSetFormatOptions BuildHealthParserOptions(bool? includeQueryPlans, bool? includeXmlReports, bool? verbose, int? maxRows = null)
+    {
+        if (verbose == true)
+            return new ResultSetFormatOptions { MaxStringLength = int.MaxValue, MaxRowsOverride = maxRows };
+
+        var excluded = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            { "deadlock_graph", "xml_deadlock_report", "blocked_process_report", "query_plan" };
+
+        if (includeQueryPlans == true)
+            excluded.Remove("query_plan");
+
+        if (includeXmlReports == true)
+        {
+            excluded.Remove("deadlock_graph");
+            excluded.Remove("xml_deadlock_report");
+            excluded.Remove("blocked_process_report");
+        }
+
+        return new ResultSetFormatOptions
+        {
+            ExcludedColumns = excluded,
+            TruncatedColumns = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["query_text"] = 1000
+            },
+            MaxRowsOverride = maxRows
+        };
+    }
+
+    internal static ResultSetFormatOptions BuildLogHunterOptions(bool? verbose, int? maxRows = null)
+    {
+        if (verbose == true)
+            return new ResultSetFormatOptions { MaxStringLength = int.MaxValue, MaxRowsOverride = maxRows };
+
+        return new ResultSetFormatOptions
+        {
+            MaxRowsOverride = maxRows ?? 200,
+            TruncatedColumns = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["text"] = 500
+            }
+        };
+    }
+
+    internal static ResultSetFormatOptions BuildHumanEventsBlockViewerOptions(bool? includeQueryPlans, bool? includeXmlReports, bool? verbose)
+    {
+        if (verbose == true)
+            return new ResultSetFormatOptions { MaxStringLength = int.MaxValue };
+
+        var excluded = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "query_plan", "blocked_process_report_xml",
+            "sql_handle", "statement_start_offset", "statement_end_offset"
+        };
+
+        if (includeQueryPlans == true)
+            excluded.Remove("query_plan");
+
+        if (includeXmlReports == true)
+            excluded.Remove("blocked_process_report_xml");
+
+        return new ResultSetFormatOptions
+        {
+            ExcludedColumns = excluded,
+            TruncatedColumns = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["query_text"] = 1000
+            }
+        };
+    }
+
+    internal static ResultSetFormatOptions BuildIndexCleanupOptions(bool? verbose, int? maxRows = null)
+    {
+        if (verbose == true)
+            return new ResultSetFormatOptions { MaxStringLength = int.MaxValue, MaxRowsOverride = maxRows };
+
+        return new ResultSetFormatOptions
+        {
+            TruncatedColumns = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["original_index_definition"] = 500
+            },
+            MaxRowsOverride = maxRows
+        };
+    }
+
+    internal static ResultSetFormatOptions BuildQueryReproBuilderOptions(bool? includeQueryPlans, bool? verbose, int? maxRows = null)
+    {
+        if (verbose == true)
+            return new ResultSetFormatOptions { MaxStringLength = int.MaxValue, MaxRowsOverride = maxRows };
+
+        var excluded = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "query_plan" };
+
+        if (includeQueryPlans == true)
+            excluded.Remove("query_plan");
+
+        return new ResultSetFormatOptions
+        {
+            ExcludedColumns = excluded,
+            TruncatedColumns = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["query_sql_text"] = 1000
+            },
+            MaxRowsOverride = maxRows
+        };
     }
 }

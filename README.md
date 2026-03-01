@@ -120,6 +120,8 @@ For Docker, Podman, and other install methods, see [Installation](#installation)
 
 - **DBA diagnostic tooling** — Integrated support for First Responder Kit, DarlingData, and sp_WhoIsActive with parameter blocking that prevents write operations. This is an entirely new MCP capability category.
 
+- **Response size optimisation** — DBA tools exclude verbose columns (XML query plans, deadlock graphs, metric breakdowns) and truncate long strings by default, reducing response sizes by 90–99%. Use `verbose` and `includeQueryPlans` parameters to get full untruncated output when needed.
+
 - **Progressive discovery** — Up to 29 tools organized into toolsets that load on demand. Only 6 core tools are exposed initially, keeping the AI's context window small and reducing token usage. Additional toolsets are discovered and enabled as needed.
 
 ## Features
@@ -137,7 +139,7 @@ For Docker, Podman, and other install methods, see [Installation](#installation)
 - ER diagram generation — PlantUML and Mermaid diagrams with smart cardinality detection
 - Schema exploration — list programmable objects, view definitions, extended properties, dependency graphs
 - Query plan analysis — estimated or actual XML execution plans
-- DBA diagnostics — optional integration with [First Responder Kit](https://github.com/BrentOzarULTD/SQL-Server-First-Responder-Kit), [DarlingData](https://github.com/erikdarlingdata/DarlingData), and [sp_WhoIsActive](https://github.com/amachanic/sp_whoisactive/)
+- DBA diagnostics — optional integration with [First Responder Kit](https://github.com/BrentOzarULTD/SQL-Server-First-Responder-Kit), [DarlingData](https://github.com/erikdarlingdata/DarlingData), and [sp_WhoIsActive](https://github.com/amachanic/sp_whoisactive/) with automatic response size optimisation
 - Progressive discovery — dynamic toolset mode reduces initial context window usage by exposing tools on demand
 
 ## Installation
@@ -350,6 +352,16 @@ The server provides 29 tools organized into toolsets. Six core tools are always 
 ### DBA Diagnostic Tools
 
 Each toolkit is enabled independently via config flags and requires the corresponding stored procedures installed on the target SQL Server.
+
+All DBA tools apply response size optimisation by default — XML query plan columns are excluded and long string values are truncated to keep responses within AI context window limits. Every tool supports these optional parameters:
+
+| Parameter | Description |
+|-----------|-------------|
+| `verbose` | Return all columns with no truncation. |
+| `includeQueryPlans` | Include XML execution plan columns in the output. |
+| `maxRows` | Maximum rows to return per result set. Available on tools with variable-length output: BlitzIndex, BlitzLock, HealthParser, LogHunter (default 200), IndexCleanup, QueryReproBuilder. |
+
+Some tools have additional parameters: `includeXmlReports` (BlitzLock, HealthParser, HumanEventsBlockViewer), `compact` (sp_WhoIsActive), `verboseMetrics` (QuickieStore).
 
 <details>
 <summary><strong>First Responder Kit</strong> (6 tools) — requires <code>EnableFirstResponderKit: true</code></summary>

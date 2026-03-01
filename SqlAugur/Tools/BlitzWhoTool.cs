@@ -45,6 +45,10 @@ public sealed class BlitzWhoTool
         bool? getLiveQueryPlan = null,
         [Description("Sort results by: elapsed_time, cpu, reads, writes, tempdb, blocking")]
         string? sortOrder = null,
+        [Description("Include XML query plan columns in output (excluded by default to reduce response size)")]
+        bool? includeQueryPlans = null,
+        [Description("Return all columns and full-length values with no truncation")]
+        bool? verbose = null,
         CancellationToken cancellationToken = default)
     {
         return await ToolHelper.ExecuteAsync(_rateLimiter, () =>
@@ -52,6 +56,7 @@ public sealed class BlitzWhoTool
                 serverName, expertMode, showSleepingSpids,
                 minElapsedSeconds, minCpuTime, minLogicalReads,
                 minBlockingSeconds, minTempdbMb, showActualParameters,
-                getLiveQueryPlan, sortOrder, cancellationToken), cancellationToken);
+                getLiveQueryPlan, sortOrder,
+                includeQueryPlans, verbose, cancellationToken), cancellationToken);
     }
 }

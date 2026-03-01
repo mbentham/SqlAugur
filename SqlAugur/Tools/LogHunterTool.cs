@@ -25,7 +25,7 @@ public sealed class LogHunterTool
     public async Task<string> LogHunter(
         [Description("Name of the SQL Server to query (use list_servers to see available names)")]
         string serverName,
-        [Description("Number of days back to search (default 7)")]
+        [Description("Number of days back to search (default 3)")]
         int? daysBack = null,
         [Description("Start date for log search (yyyy-MM-dd or yyyy-MM-dd HH:mm:ss)")]
         DateTime? startDate = null,
@@ -37,11 +37,16 @@ public sealed class LogHunterTool
         bool? customMessageOnly = null,
         [Description("Only search the current (first) error log file")]
         bool? firstLogOnly = null,
+        [Description("Return all columns and full-length values with no truncation or row limits")]
+        bool? verbose = null,
+        [Description("Maximum number of rows to return per result set (default 200)")]
+        int? maxRows = null,
         CancellationToken cancellationToken = default)
     {
         return await ToolHelper.ExecuteAsync(_rateLimiter, () =>
             _darlingDataService.ExecuteLogHunterAsync(
                 serverName, daysBack, startDate, endDate,
-                customMessage, customMessageOnly, firstLogOnly, cancellationToken), cancellationToken);
+                customMessage, customMessageOnly, firstLogOnly,
+                verbose, maxRows, cancellationToken), cancellationToken);
     }
 }

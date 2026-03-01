@@ -33,11 +33,16 @@ public sealed class BlitzTool
         int? ignorePrioritiesAbove = null,
         [Description("Required for some intensive checks. Set to true to enable deep analysis.")]
         bool? bringThePain = null,
+        [Description("Include XML query plan columns in output (excluded by default to reduce response size)")]
+        bool? includeQueryPlans = null,
+        [Description("Return all columns and full-length values with no truncation")]
+        bool? verbose = null,
         CancellationToken cancellationToken = default)
     {
         return await ToolHelper.ExecuteAsync(_rateLimiter, () =>
             _frkService.ExecuteBlitzAsync(
                 serverName, checkUserDatabaseObjects, checkServerInfo,
-                ignorePrioritiesAbove, bringThePain, cancellationToken), cancellationToken);
+                ignorePrioritiesAbove, bringThePain,
+                includeQueryPlans, verbose, cancellationToken), cancellationToken);
     }
 }

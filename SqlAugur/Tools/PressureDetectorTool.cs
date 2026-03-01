@@ -45,6 +45,10 @@ public sealed class PressureDetectorTool
         bool? troubleshootBlocking = null,
         [Description("Enable tempdb pressure diagnostics (may add load on a stressed server)")]
         bool? gimmeDanger = null,
+        [Description("Include XML query plan columns in output (excluded by default to reduce response size)")]
+        bool? includeQueryPlans = null,
+        [Description("Return all columns and full-length values with no truncation")]
+        bool? verbose = null,
         CancellationToken cancellationToken = default)
     {
         if (sampleSeconds.HasValue)
@@ -55,6 +59,6 @@ public sealed class PressureDetectorTool
                 serverName, whatToCheck, skipQueries, skipPlanXml,
                 minimumDiskLatencyMs, cpuUtilizationThreshold, skipWaits,
                 skipPerfmon, sampleSeconds, troubleshootBlocking, gimmeDanger,
-                cancellationToken), cancellationToken);
+                includeQueryPlans, verbose, cancellationToken), cancellationToken);
     }
 }

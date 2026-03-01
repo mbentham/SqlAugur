@@ -47,6 +47,12 @@ public sealed class QueryReproBuilderTool
         string? queryTextSearch = null,
         [Description("Exclude queries containing this text")]
         string? queryTextSearchNot = null,
+        [Description("Include XML query plan columns in output (excluded by default to reduce response size)")]
+        bool? includeQueryPlans = null,
+        [Description("Return all columns and full-length values with no truncation")]
+        bool? verbose = null,
+        [Description("Maximum number of rows to return per result set")]
+        int? maxRows = null,
         CancellationToken cancellationToken = default)
     {
         return await ToolHelper.ExecuteAsync(_rateLimiter, () =>
@@ -54,6 +60,6 @@ public sealed class QueryReproBuilderTool
                 serverName, databaseName, startDate, endDate,
                 includePlanIds, includeQueryIds, ignorePlanIds, ignoreQueryIds,
                 procedureSchema, procedureName, queryTextSearch, queryTextSearchNot,
-                cancellationToken), cancellationToken);
+                includeQueryPlans, verbose, maxRows, cancellationToken), cancellationToken);
     }
 }

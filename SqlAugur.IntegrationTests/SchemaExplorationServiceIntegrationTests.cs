@@ -80,7 +80,7 @@ public sealed class SchemaExplorationServiceIntegrationTests
     }
 
     [Fact]
-    public async Task ListProgrammableObjects_HasDateFields()
+    public async Task ListProgrammableObjects_HasExpectedFields()
     {
         var service = ServiceFactory.CreateSchemaExplorationService(_fixture.ConnectionString);
 
@@ -91,8 +91,9 @@ public sealed class SchemaExplorationServiceIntegrationTests
         var objects = JsonDocument.Parse(result).RootElement;
         var first = objects.EnumerateArray().First();
 
-        Assert.NotNull(first.GetProperty("createDate").GetString());
-        Assert.NotNull(first.GetProperty("modifyDate").GetString());
+        Assert.NotNull(first.GetProperty("schema").GetString());
+        Assert.NotNull(first.GetProperty("name").GetString());
+        Assert.NotNull(first.GetProperty("type").GetString());
     }
 
     // ───────────────────────────────────────────────

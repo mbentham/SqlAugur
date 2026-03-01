@@ -223,6 +223,30 @@ public sealed class SqlServerContainerFixture : IAsyncLifetime
                 @level1type = N'TABLE', @level1name = N'Products',
                 @level2type = N'COLUMN', @level2name = N'Name'
             """);
+
+        // Test procedure for FormatResultSets integration tests
+        await ExecuteAsync(connection, """
+            CREATE PROCEDURE dbo.usp_FormatResultSetsTest
+            AS
+            BEGIN
+                -- Result set 0: columns including a large string and binary
+                SELECT
+                    1 AS Id,
+                    'ShortValue' AS ShortCol,
+                    REPLICATE(CAST('X' AS NVARCHAR(MAX)), 50000) AS LargeCol,
+                    CAST(0xDEADBEEF AS VARBINARY(4)) AS BinaryCol,
+                    'QueryPlanXml' AS QueryPlan
+
+                -- Result set 1: second result set
+                SELECT
+                    100 AS MetricId,
+                    'MetricName' AS MetricName
+
+                -- Result set 2: third result set
+                SELECT
+                    'ThirdSet' AS Label
+            END
+            """);
     }
 
     private static async Task ExecuteAsync(SqlConnection connection, string sql)

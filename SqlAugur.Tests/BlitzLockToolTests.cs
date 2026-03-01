@@ -72,10 +72,41 @@ public class BlitzLockToolTests
         Assert.Contains("Procedure not installed", ex.Message);
     }
 
+    [Fact]
+    public async Task DaysBack_PassedThrough()
+    {
+        await _tool.BlitzLock("srv", daysBack: 7, cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(7, _stub.CapturedDaysBack);
+    }
+
+    [Fact]
+    public async Task IncludeQueryPlans_PassedThrough()
+    {
+        await _tool.BlitzLock("srv", includeQueryPlans: true, cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.True(_stub.CapturedIncludeQueryPlans);
+    }
+
+    [Fact]
+    public async Task DefaultsAreNull()
+    {
+        await _tool.BlitzLock("srv", cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Null(_stub.CapturedDaysBack);
+        Assert.Null(_stub.CapturedIncludeQueryPlans);
+        Assert.Null(_stub.CapturedIncludeXmlReports);
+        Assert.Null(_stub.CapturedVerbose);
+    }
+
     private sealed class StubFirstResponderService : IFirstResponderService
     {
         public DateTime? CapturedStartDate { get; private set; }
         public DateTime? CapturedEndDate { get; private set; }
+        public int? CapturedDaysBack { get; private set; }
+        public bool? CapturedIncludeQueryPlans { get; private set; }
+        public bool? CapturedIncludeXmlReports { get; private set; }
+        public bool? CapturedVerbose { get; private set; }
         public Exception? ExceptionToThrow { get; set; }
 
         public Task<string> ExecuteBlitzLockAsync(
@@ -84,6 +115,7 @@ public class BlitzLockToolTests
             string? objectName, string? storedProcName,
             string? appName, string? hostName, string? loginName,
             bool? victimsOnly, string? eventSessionName,
+            bool? includeQueryPlans, bool? includeXmlReports, bool? verbose, int? daysBack,
             CancellationToken cancellationToken)
         {
             if (ExceptionToThrow is not null)
@@ -91,22 +123,26 @@ public class BlitzLockToolTests
 
             CapturedStartDate = startDate;
             CapturedEndDate = endDate;
+            CapturedDaysBack = daysBack;
+            CapturedIncludeQueryPlans = includeQueryPlans;
+            CapturedIncludeXmlReports = includeXmlReports;
+            CapturedVerbose = verbose;
             return Task.FromResult("ok");
         }
 
-        public Task<string> ExecuteBlitzAsync(string serverName, bool? checkUserDatabaseObjects, bool? checkServerInfo, int? ignorePrioritiesAbove, bool? bringThePain, CancellationToken cancellationToken)
+        public Task<string> ExecuteBlitzAsync(string serverName, bool? checkUserDatabaseObjects, bool? checkServerInfo, int? ignorePrioritiesAbove, bool? bringThePain, bool? includeQueryPlans, bool? verbose, CancellationToken cancellationToken)
             => throw new NotImplementedException();
 
-        public Task<string> ExecuteBlitzFirstAsync(string serverName, int? seconds, bool? expertMode, bool? showSleepingSpids, bool? sinceStartup, int? fileLatencyThresholdMs, CancellationToken cancellationToken)
+        public Task<string> ExecuteBlitzFirstAsync(string serverName, int? seconds, bool? expertMode, bool? showSleepingSpids, bool? sinceStartup, int? fileLatencyThresholdMs, bool? includeQueryPlans, bool? verbose, string? resultSets, CancellationToken cancellationToken)
             => throw new NotImplementedException();
 
-        public Task<string> ExecuteBlitzCacheAsync(string serverName, string? sortOrder, int? top, bool? expertMode, string? databaseName, string? slowlySearchPlansFor, bool? exportToExcel, CancellationToken cancellationToken)
+        public Task<string> ExecuteBlitzCacheAsync(string serverName, string? sortOrder, int? top, bool? expertMode, string? databaseName, string? slowlySearchPlansFor, bool? exportToExcel, bool? includeQueryPlans, bool? verbose, CancellationToken cancellationToken)
             => throw new NotImplementedException();
 
-        public Task<string> ExecuteBlitzIndexAsync(string serverName, string? databaseName, string? schemaName, string? tableName, bool? getAllDatabases, int? mode, int? thresholdMb, int? filter, CancellationToken cancellationToken)
+        public Task<string> ExecuteBlitzIndexAsync(string serverName, string? databaseName, string? schemaName, string? tableName, bool? getAllDatabases, int? mode, int? thresholdMb, int? filter, bool? includeQueryPlans, bool? verbose, CancellationToken cancellationToken)
             => throw new NotImplementedException();
 
-        public Task<string> ExecuteBlitzWhoAsync(string serverName, bool? expertMode, bool? showSleepingSpids, int? minElapsedSeconds, int? minCpuTime, int? minLogicalReads, int? minBlockingSeconds, int? minTempdbMb, bool? showActualParameters, bool? getLiveQueryPlan, string? sortOrder, CancellationToken cancellationToken)
+        public Task<string> ExecuteBlitzWhoAsync(string serverName, bool? expertMode, bool? showSleepingSpids, int? minElapsedSeconds, int? minCpuTime, int? minLogicalReads, int? minBlockingSeconds, int? minTempdbMb, bool? showActualParameters, bool? getLiveQueryPlan, string? sortOrder, bool? includeQueryPlans, bool? verbose, CancellationToken cancellationToken)
             => throw new NotImplementedException();
     }
 }

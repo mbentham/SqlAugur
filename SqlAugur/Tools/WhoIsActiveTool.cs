@@ -65,6 +65,12 @@ public sealed class WhoIsActiveTool
         string? sortOrder = null,
         [Description("Format output for readability (adds units to numeric values)")]
         bool? formatOutput = null,
+        [Description("Return minimal columns with aggressive truncation for quick overview")]
+        bool? compact = null,
+        [Description("Custom output column list for sp_WhoIsActive (e.g. '[session_id][status][sql_text]'). Overrides default column selection.")]
+        string? outputColumnList = null,
+        [Description("Return all columns and full-length values with no truncation or column filtering")]
+        bool? verbose = null,
         CancellationToken cancellationToken = default)
     {
         if (deltaInterval.HasValue)
@@ -77,6 +83,7 @@ public sealed class WhoIsActiveTool
                 getFullInnerText, getPlans, getOuterCommand, getTransactionInfo,
                 getTaskInfo, getLocks, getAvgTime, getAdditionalInfo,
                 getMemoryInfo, findBlockLeaders, deltaInterval, sortOrder,
-                formatOutput, cancellationToken), cancellationToken);
+                formatOutput, compact, outputColumnList, verbose,
+                cancellationToken), cancellationToken);
     }
 }

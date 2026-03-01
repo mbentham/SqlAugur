@@ -32,6 +32,9 @@ public class StoredProcedureServiceBaseTests
 
         public static void CallAddIfNotNull(Dictionary<string, object?> p, string name, object? value)
             => AddIfNotNull(p, name, value);
+
+        public static object CallTruncateIfNeeded(object value, string columnName, ResultSetFormatOptions? options)
+            => TruncateIfNeeded(value, columnName, options);
     }
 
     private static IOptions<SqlAugurOptions> MakeOptions() =>
@@ -258,5 +261,103 @@ public class StoredProcedureServiceBaseTests
     {
         var result = StoredProcedureServiceBase.FormatValue(9999999999L);
         Assert.Equal(9999999999L, result);
+    }
+
+    // ───────────────────────────────────────────────
+    // TruncateIfNeeded
+    // ───────────────────────────────────────────────
+
+    [Fact]
+    public void TruncateIfNeeded_ShortString_NoOp()
+    {
+        var result = TestableService.CallTruncateIfNeeded("hello", "col", null);
+        Assert.Equal("hello", result);
+    }
+
+    [Fact]
+    public void TruncateIfNeeded_LongString_TruncatesAtGlobalDefault()
+    {
+        var longStr = new string('x', 9000);
+        var result = (string)TestableService.CallTruncateIfNeeded(longStr, "col", null);
+
+        Assert.Equal(StoredProcedureServiceBase.GlobalMaxStringLength + "...[truncated]".Length, result.Length);
+        Assert.EndsWith("...[truncated]", result);
+    }
+
+    [Fact]
+    public void TruncateIfNeeded_CustomMaxStringLength_OverridesGlobal()
+    {
+        var options = new ResultSetFormatOptions { MaxStringLength = 100 };
+        var longStr = new string('x', 200);
+        var result = (string)TestableService.CallTruncateIfNeeded(longStr, "col", options);
+
+        Assert.Equal(100 + "...[truncated]".Length, result.Length);
+        Assert.EndsWith("...[truncated]", result);
+    }
+
+    [Fact]
+    public void TruncateIfNeeded_TruncatedColumns_TakesPrecedence()
+    {
+        var options = new ResultSetFormatOptions
+        {
+            MaxStringLength = 5000,
+            TruncatedColumns = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["QueryText"] = 50
+            }
+        };
+
+        var longStr = new string('x', 200);
+        var result = (string)TestableService.CallTruncateIfNeeded(longStr, "QueryText", options);
+
+        Assert.Equal(50 + "...[truncated]".Length, result.Length);
+        Assert.EndsWith("...[truncated]", result);
+    }
+
+    [Fact]
+    public void TruncateIfNeeded_ExactAtLimit_NotTruncated()
+    {
+        var options = new ResultSetFormatOptions { MaxStringLength = 100 };
+        var exactStr = new string('x', 100);
+        var result = TestableService.CallTruncateIfNeeded(exactStr, "col", options);
+
+        Assert.Equal(exactStr, result);
+    }
+
+    [Fact]
+    public void TruncateIfNeeded_OneBeyondLimit_Truncated()
+    {
+        var options = new ResultSetFormatOptions { MaxStringLength = 100 };
+        var overStr = new string('x', 101);
+        var result = (string)TestableService.CallTruncateIfNeeded(overStr, "col", options);
+
+        Assert.EndsWith("...[truncated]", result);
+    }
+
+    [Fact]
+    public void TruncateIfNeeded_NonString_Unchanged()
+    {
+        var result = TestableService.CallTruncateIfNeeded(42, "col", null);
+        Assert.Equal(42, result);
+    }
+
+    [Fact]
+    public void TruncateIfNeeded_NullOptions_UsesGlobalDefault()
+    {
+        var longStr = new string('x', 9000);
+        var result = (string)TestableService.CallTruncateIfNeeded(longStr, "col", null);
+
+        Assert.EndsWith("...[truncated]", result);
+        Assert.StartsWith(new string('x', StoredProcedureServiceBase.GlobalMaxStringLength), result);
+    }
+
+    [Fact]
+    public void TruncateIfNeeded_MaxStringLengthIntMax_NoTruncation()
+    {
+        var options = new ResultSetFormatOptions { MaxStringLength = int.MaxValue };
+        var longStr = new string('x', 50000);
+        var result = TestableService.CallTruncateIfNeeded(longStr, "col", options);
+
+        Assert.Equal(longStr, result);
     }
 }

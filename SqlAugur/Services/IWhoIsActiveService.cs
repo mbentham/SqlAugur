@@ -24,5 +24,8 @@ public interface IWhoIsActiveService
         int? deltaInterval,
         string? sortOrder,
         bool? formatOutput,
+        bool? compact,
+        string? outputColumnList,
+        bool? verbose,
         CancellationToken cancellationToken);
 }

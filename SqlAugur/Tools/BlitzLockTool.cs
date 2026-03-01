@@ -46,6 +46,14 @@ public sealed class BlitzLockTool
         bool? victimsOnly = null,
         [Description("Name of the extended event session to read from (default: system_health)")]
         string? eventSessionName = null,
+        [Description("Include XML query plan columns in output (excluded by default to reduce response size)")]
+        bool? includeQueryPlans = null,
+        [Description("Include XML deadlock graph and process reports (excluded by default to reduce response size)")]
+        bool? includeXmlReports = null,
+        [Description("Return all columns and full-length values with no truncation")]
+        bool? verbose = null,
+        [Description("Number of days back to search for deadlocks (default 1). Used when startDate is not provided.")]
+        int? daysBack = null,
         CancellationToken cancellationToken = default)
     {
         DateTime? parsedStart = null;
@@ -69,6 +77,8 @@ public sealed class BlitzLockTool
             _frkService.ExecuteBlitzLockAsync(
                 serverName, databaseName, parsedStart, parsedEnd,
                 objectName, storedProcName, appName, hostName,
-                loginName, victimsOnly, eventSessionName, cancellationToken), cancellationToken);
+                loginName, victimsOnly, eventSessionName,
+                includeQueryPlans, includeXmlReports, verbose, daysBack,
+                cancellationToken), cancellationToken);
     }
 }

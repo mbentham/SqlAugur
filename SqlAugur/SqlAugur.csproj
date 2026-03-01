@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="SqlAugur.Tests" />
+    <InternalsVisibleTo Include="SqlAugur.IntegrationTests" />
   </ItemGroup>
 
   <ItemGroup>

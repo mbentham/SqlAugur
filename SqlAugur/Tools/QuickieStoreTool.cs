@@ -65,6 +65,12 @@ public sealed class QuickieStoreTool
         bool? formatOutput = null,
         [Description("Analyze all databases on the server")]
         bool? getAllDatabases = null,
+        [Description("Include XML query plan columns in output (excluded by default to reduce response size)")]
+        bool? includeQueryPlans = null,
+        [Description("Include min/max/total metric columns (excluded by default to reduce response size)")]
+        bool? verboseMetrics = null,
+        [Description("Return all columns and full-length values with no truncation")]
+        bool? verbose = null,
         CancellationToken cancellationToken = default)
     {
         if (top.HasValue)
@@ -76,6 +82,7 @@ public sealed class QuickieStoreTool
                 executionCount, durationMs, procedureSchema, procedureName,
                 includeQueryIds, includeQueryHashes, ignorePlanIds, ignoreQueryIds,
                 queryTextSearch, queryTextSearchNot, waitFilter, queryType,
-                expertMode, formatOutput, getAllDatabases, cancellationToken), cancellationToken);
+                expertMode, formatOutput, getAllDatabases,
+                includeQueryPlans, verboseMetrics, verbose, cancellationToken), cancellationToken);
     }
 }

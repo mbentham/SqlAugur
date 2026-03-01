@@ -39,11 +39,18 @@ public sealed class HumanEventsBlockViewerTool
         string? objectName = null,
         [Description("Maximum number of blocking events to return")]
         int? maxBlockingEvents = null,
+        [Description("Include XML query plan columns in output (excluded by default to reduce response size)")]
+        bool? includeQueryPlans = null,
+        [Description("Include XML blocked process report columns (excluded by default to reduce response size)")]
+        bool? includeXmlReports = null,
+        [Description("Return all columns and full-length values with no truncation")]
+        bool? verbose = null,
         CancellationToken cancellationToken = default)
     {
         return await ToolHelper.ExecuteAsync(_rateLimiter, () =>
             _darlingDataService.ExecuteHumanEventsBlockViewerAsync(
                 serverName, sessionName, targetType, startDate, endDate,
-                databaseName, objectName, maxBlockingEvents, cancellationToken), cancellationToken);
+                databaseName, objectName, maxBlockingEvents,
+                includeQueryPlans, includeXmlReports, verbose, cancellationToken), cancellationToken);
     }
 }

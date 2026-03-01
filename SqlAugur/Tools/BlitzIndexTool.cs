@@ -39,11 +39,16 @@ public sealed class BlitzIndexTool
         int? thresholdMb = null,
         [Description("Filter: 0=All (default), 1=No warnings for 0-read objects, 2=No read indexes, 3=High maintenance, 4=Active tables only")]
         int? filter = null,
+        [Description("Include sample query plan columns in output (excluded by default to reduce response size)")]
+        bool? includeQueryPlans = null,
+        [Description("Return all columns and full-length values with no truncation")]
+        bool? verbose = null,
         CancellationToken cancellationToken = default)
     {
         return await ToolHelper.ExecuteAsync(_rateLimiter, () =>
             _frkService.ExecuteBlitzIndexAsync(
                 serverName, databaseName, schemaName, tableName,
-                getAllDatabases, mode, thresholdMb, filter, cancellationToken), cancellationToken);
+                getAllDatabases, mode, thresholdMb, filter,
+                includeQueryPlans, verbose, cancellationToken), cancellationToken);
     }
 }

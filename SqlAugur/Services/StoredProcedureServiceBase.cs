@@ -17,6 +17,8 @@ public abstract class StoredProcedureServiceBase
     private readonly string _blockedParameterReason;
     private readonly string _procedureNotFoundMessage;
 
+    internal const int GlobalMaxStringLength = 8000;
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -44,6 +46,16 @@ public abstract class StoredProcedureServiceBase
         string serverName,
         string procedureName,
         Dictionary<string, object?> parameters,
+        CancellationToken cancellationToken)
+    {
+        return await ExecuteProcedureAsync(serverName, procedureName, parameters, formatOptions: null, cancellationToken);
+    }
+
+    protected async Task<string> ExecuteProcedureAsync(
+        string serverName,
+        string procedureName,
+        Dictionary<string, object?> parameters,
+        ResultSetFormatOptions? formatOptions,
         CancellationToken cancellationToken)
     {
         if (!_allowedProcedures.Contains(procedureName))
@@ -82,7 +94,7 @@ public abstract class StoredProcedureServiceBase
         try
         {
             await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-            return await FormatResultSetsAsync(reader, cancellationToken);
+            return await FormatResultSetsAsync(reader, formatOptions, cancellationToken);
         }
         catch (SqlException ex) when (ex.Number == 2812)
         {
@@ -94,20 +106,32 @@ public abstract class StoredProcedureServiceBase
 
     private async Task<string> FormatResultSetsAsync(
         SqlDataReader reader,
+        ResultSetFormatOptions? formatOptions,
         CancellationToken cancellationToken)
     {
         var resultSets = new List<Dictionary<string, object?>>();
+        var maxRows = formatOptions?.MaxRowsOverride ?? Options.MaxRows;
+        var resultSetIndex = 0;
 
         do
         {
             if (reader.FieldCount == 0)
+            {
+                resultSetIndex++;
                 continue;
+            }
+
+            if (formatOptions?.ExcludedResultSets.Contains(resultSetIndex) == true)
+            {
+                resultSetIndex++;
+                continue;
+            }
 
             var rows = new List<Dictionary<string, object?>>();
             var truncated = false;
             while (await reader.ReadAsync(cancellationToken))
             {
-                if (rows.Count >= Options.MaxRows)
+                if (rows.Count >= maxRows)
                 {
                     truncated = true;
                     break;
@@ -117,7 +141,13 @@ public abstract class StoredProcedureServiceBase
                 for (var i = 0; i < reader.FieldCount; i++)
                 {
                     var name = reader.GetName(i);
+
+                    if (formatOptions?.ExcludedColumns.Contains(name) == true)
+                        continue;
+
                     var value = reader.IsDBNull(i) ? null : FormatValue(reader.GetValue(i));
+                    if (value is not null)
+                        value = TruncateIfNeeded(value, name, formatOptions);
                     row[name] = value;
                 }
                 rows.Add(row);
@@ -128,6 +158,8 @@ public abstract class StoredProcedureServiceBase
                 ["truncated"] = truncated,
                 ["rows"] = rows
             });
+
+            resultSetIndex++;
 
         } while (await reader.NextResultAsync(cancellationToken));
 
@@ -153,4 +185,25 @@ public abstract class StoredProcedureServiceBase
         byte[] bytes => Convert.ToBase64String(bytes),
         _ => value
     };
+
+    internal static object TruncateIfNeeded(object value, string columnName, ResultSetFormatOptions? options)
+    {
+        if (value is not string str)
+            return value;
+
+        int maxLength;
+        if (options?.TruncatedColumns.TryGetValue(columnName, out var columnLimit) == true)
+        {
+            maxLength = columnLimit;
+        }
+        else
+        {
+            maxLength = options?.MaxStringLength ?? GlobalMaxStringLength;
+        }
+
+        if (maxLength == int.MaxValue || str.Length <= maxLength)
+            return value;
+
+        return str[..maxLength] + "...[truncated]";
+    }
 }

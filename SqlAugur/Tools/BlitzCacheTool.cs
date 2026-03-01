@@ -37,6 +37,10 @@ public sealed class BlitzCacheTool
         string? slowlySearchPlansFor = null,
         [Description("Format output for Excel export (removes XML columns)")]
         bool? exportToExcel = null,
+        [Description("Include XML query plan columns in output (excluded by default to reduce response size)")]
+        bool? includeQueryPlans = null,
+        [Description("Return all columns and full-length values with no truncation")]
+        bool? verbose = null,
         CancellationToken cancellationToken = default)
     {
         if (top.HasValue)
@@ -45,6 +49,7 @@ public sealed class BlitzCacheTool
         return await ToolHelper.ExecuteAsync(_rateLimiter, () =>
             _frkService.ExecuteBlitzCacheAsync(
                 serverName, sortOrder, top, expertMode, databaseName,
-                slowlySearchPlansFor, exportToExcel, cancellationToken), cancellationToken);
+                slowlySearchPlansFor, exportToExcel,
+                includeQueryPlans, verbose, cancellationToken), cancellationToken);
     }
 }

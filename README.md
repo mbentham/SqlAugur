@@ -359,6 +359,7 @@ All DBA tools apply response size optimisation by default — XML query plan col
 |-----------|-------------|
 | `verbose` | Return all columns with no truncation. |
 | `includeQueryPlans` | Include XML execution plan columns in the output. |
+| `maxRows` | Maximum rows to return per result set. Available on tools with variable-length output: BlitzIndex, BlitzLock, HealthParser, LogHunter (default 200), IndexCleanup, QueryReproBuilder. |
 
 Some tools have additional parameters: `includeXmlReports` (BlitzLock, HealthParser, HumanEventsBlockViewer), `compact` (sp_WhoIsActive), `verboseMetrics` (QuickieStore).
 

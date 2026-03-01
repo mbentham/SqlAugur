@@ -59,6 +59,7 @@ public interface IDarlingDataService
         bool? includeQueryPlans,
         bool? includeXmlReports,
         bool? verbose,
+        int? maxRows,
         CancellationToken cancellationToken);
 
     Task<string> ExecuteLogHunterAsync(
@@ -70,6 +71,7 @@ public interface IDarlingDataService
         bool? customMessageOnly,
         bool? firstLogOnly,
         bool? verbose,
+        int? maxRows,
         CancellationToken cancellationToken);
 
     Task<string> ExecuteHumanEventsBlockViewerAsync(
@@ -98,6 +100,7 @@ public interface IDarlingDataService
         bool? dedupeOnly,
         bool? getAllDatabases,
         bool? verbose,
+        int? maxRows,
         CancellationToken cancellationToken);
 
     Task<string> ExecuteQueryReproBuilderAsync(
@@ -115,5 +118,6 @@ public interface IDarlingDataService
         string? queryTextSearchNot,
         bool? includeQueryPlans,
         bool? verbose,
+        int? maxRows,
         CancellationToken cancellationToken);
 }

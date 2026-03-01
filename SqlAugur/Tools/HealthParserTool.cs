@@ -49,6 +49,8 @@ public sealed class HealthParserTool
         bool? includeXmlReports = null,
         [Description("Return all columns and full-length values with no truncation")]
         bool? verbose = null,
+        [Description("Maximum number of rows to return per result set")]
+        int? maxRows = null,
         CancellationToken cancellationToken = default)
     {
         return await ToolHelper.ExecuteAsync(_rateLimiter, () =>
@@ -56,6 +58,6 @@ public sealed class HealthParserTool
                 serverName, whatToCheck, startDate, endDate, warningsOnly,
                 databaseName, waitDurationMs, waitRoundIntervalMinutes,
                 skipLocks, pendingTaskThreshold,
-                includeQueryPlans, includeXmlReports, verbose, cancellationToken), cancellationToken);
+                includeQueryPlans, includeXmlReports, verbose, maxRows, cancellationToken), cancellationToken);
     }
 }

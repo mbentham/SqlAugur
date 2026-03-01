@@ -51,6 +51,8 @@ public sealed class QueryReproBuilderTool
         bool? includeQueryPlans = null,
         [Description("Return all columns and full-length values with no truncation")]
         bool? verbose = null,
+        [Description("Maximum number of rows to return per result set")]
+        int? maxRows = null,
         CancellationToken cancellationToken = default)
     {
         return await ToolHelper.ExecuteAsync(_rateLimiter, () =>
@@ -58,6 +60,6 @@ public sealed class QueryReproBuilderTool
                 serverName, databaseName, startDate, endDate,
                 includePlanIds, includeQueryIds, ignorePlanIds, ignoreQueryIds,
                 procedureSchema, procedureName, queryTextSearch, queryTextSearchNot,
-                includeQueryPlans, verbose, cancellationToken), cancellationToken);
+                includeQueryPlans, verbose, maxRows, cancellationToken), cancellationToken);
     }
 }

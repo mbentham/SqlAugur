@@ -230,4 +230,43 @@ public class FirstResponderFormatOptionsTests
         Assert.Empty(options.ExcludedColumns);
         Assert.Equal(int.MaxValue, options.MaxStringLength);
     }
+
+    // ───────────────────────────────────────────────
+    // MaxRows
+    // ───────────────────────────────────────────────
+
+    [Fact]
+    public void BlitzIndex_WithMaxRows_SetsMaxRowsOverride()
+    {
+        var options = FirstResponderService.BuildBlitzIndexOptions(null, null, maxRows: 50);
+        Assert.Equal(50, options.MaxRowsOverride);
+    }
+
+    [Fact]
+    public void BlitzIndex_WithoutMaxRows_MaxRowsOverrideIsNull()
+    {
+        var options = FirstResponderService.BuildBlitzIndexOptions(null, null);
+        Assert.Null(options.MaxRowsOverride);
+    }
+
+    [Fact]
+    public void BlitzIndex_Verbose_WithMaxRows_SetsMaxRowsOverride()
+    {
+        var options = FirstResponderService.BuildBlitzIndexOptions(null, verbose: true, maxRows: 25);
+        Assert.Equal(25, options.MaxRowsOverride);
+    }
+
+    [Fact]
+    public void BlitzLock_WithMaxRows_SetsMaxRowsOverride()
+    {
+        var options = FirstResponderService.BuildBlitzLockOptions(null, null, null, maxRows: 100);
+        Assert.Equal(100, options.MaxRowsOverride);
+    }
+
+    [Fact]
+    public void BlitzLock_WithoutMaxRows_MaxRowsOverrideIsNull()
+    {
+        var options = FirstResponderService.BuildBlitzLockOptions(null, null, null);
+        Assert.Null(options.MaxRowsOverride);
+    }
 }

@@ -45,12 +45,14 @@ public sealed class IndexCleanupTool
         bool? getAllDatabases = null,
         [Description("Return all columns and full-length values with no truncation")]
         bool? verbose = null,
+        [Description("Maximum number of rows to return per result set")]
+        int? maxRows = null,
         CancellationToken cancellationToken = default)
     {
         return await ToolHelper.ExecuteAsync(_rateLimiter, () =>
             _darlingDataService.ExecuteIndexCleanupAsync(
                 serverName, databaseName, schemaName, tableName,
                 minReads, minWrites, minSizeGb, minRows,
-                dedupeOnly, getAllDatabases, verbose, cancellationToken), cancellationToken);
+                dedupeOnly, getAllDatabases, verbose, maxRows, cancellationToken), cancellationToken);
     }
 }

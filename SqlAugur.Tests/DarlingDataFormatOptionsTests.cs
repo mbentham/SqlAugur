@@ -218,4 +218,64 @@ public class DarlingDataFormatOptionsTests
         Assert.Empty(options.ExcludedColumns);
         Assert.Equal(int.MaxValue, options.MaxStringLength);
     }
+
+    // ───────────────────────────────────────────────
+    // MaxRows
+    // ───────────────────────────────────────────────
+
+    [Fact]
+    public void HealthParser_WithMaxRows_SetsMaxRowsOverride()
+    {
+        var options = DarlingDataService.BuildHealthParserOptions(null, null, null, maxRows: 50);
+        Assert.Equal(50, options.MaxRowsOverride);
+    }
+
+    [Fact]
+    public void HealthParser_WithoutMaxRows_MaxRowsOverrideIsNull()
+    {
+        var options = DarlingDataService.BuildHealthParserOptions(null, null, null);
+        Assert.Null(options.MaxRowsOverride);
+    }
+
+    [Fact]
+    public void LogHunter_WithMaxRows_OverridesDefault()
+    {
+        var options = DarlingDataService.BuildLogHunterOptions(null, maxRows: 500);
+        Assert.Equal(500, options.MaxRowsOverride);
+    }
+
+    [Fact]
+    public void LogHunter_WithoutMaxRows_DefaultsTo200()
+    {
+        var options = DarlingDataService.BuildLogHunterOptions(null);
+        Assert.Equal(200, options.MaxRowsOverride);
+    }
+
+    [Fact]
+    public void IndexCleanup_WithMaxRows_SetsMaxRowsOverride()
+    {
+        var options = DarlingDataService.BuildIndexCleanupOptions(null, maxRows: 75);
+        Assert.Equal(75, options.MaxRowsOverride);
+    }
+
+    [Fact]
+    public void IndexCleanup_WithoutMaxRows_MaxRowsOverrideIsNull()
+    {
+        var options = DarlingDataService.BuildIndexCleanupOptions(null);
+        Assert.Null(options.MaxRowsOverride);
+    }
+
+    [Fact]
+    public void QueryReproBuilder_WithMaxRows_SetsMaxRowsOverride()
+    {
+        var options = DarlingDataService.BuildQueryReproBuilderOptions(null, null, maxRows: 30);
+        Assert.Equal(30, options.MaxRowsOverride);
+    }
+
+    [Fact]
+    public void QueryReproBuilder_WithoutMaxRows_MaxRowsOverrideIsNull()
+    {
+        var options = DarlingDataService.BuildQueryReproBuilderOptions(null, null);
+        Assert.Null(options.MaxRowsOverride);
+    }
 }

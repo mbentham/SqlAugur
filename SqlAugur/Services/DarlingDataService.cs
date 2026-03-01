@@ -143,6 +143,7 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         bool? includeQueryPlans,
         bool? includeXmlReports,
         bool? verbose,
+        int? maxRows,
         CancellationToken cancellationToken)
     {
         var parameters = new Dictionary<string, object?>();
@@ -156,7 +157,7 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         AddBoolParam(parameters, "@skip_locks", skipLocks);
         AddIfNotNull(parameters, "@pending_task_threshold", pendingTaskThreshold);
 
-        var formatOptions = BuildHealthParserOptions(includeQueryPlans, includeXmlReports, verbose);
+        var formatOptions = BuildHealthParserOptions(includeQueryPlans, includeXmlReports, verbose, maxRows);
         return await ExecuteProcedureAsync(serverName, "sp_HealthParser", parameters, formatOptions, cancellationToken);
     }
 
@@ -169,6 +170,7 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         bool? customMessageOnly,
         bool? firstLogOnly,
         bool? verbose,
+        int? maxRows,
         CancellationToken cancellationToken)
     {
         var parameters = new Dictionary<string, object?>();
@@ -179,7 +181,7 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         AddBoolParam(parameters, "@custom_message_only", customMessageOnly);
         AddBoolParam(parameters, "@first_log_only", firstLogOnly ?? true);
 
-        var formatOptions = BuildLogHunterOptions(verbose);
+        var formatOptions = BuildLogHunterOptions(verbose, maxRows);
         return await ExecuteProcedureAsync(serverName, "sp_LogHunter", parameters, formatOptions, cancellationToken);
     }
 
@@ -222,6 +224,7 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         bool? dedupeOnly,
         bool? getAllDatabases,
         bool? verbose,
+        int? maxRows,
         CancellationToken cancellationToken)
     {
         var parameters = new Dictionary<string, object?>();
@@ -235,7 +238,7 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         AddBoolParam(parameters, "@dedupe_only", dedupeOnly);
         AddBoolParam(parameters, "@get_all_databases", getAllDatabases);
 
-        var formatOptions = BuildIndexCleanupOptions(verbose);
+        var formatOptions = BuildIndexCleanupOptions(verbose, maxRows);
         return await ExecuteProcedureAsync(serverName, "sp_IndexCleanup", parameters, formatOptions, cancellationToken);
     }
 
@@ -254,6 +257,7 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         string? queryTextSearchNot,
         bool? includeQueryPlans,
         bool? verbose,
+        int? maxRows,
         CancellationToken cancellationToken)
     {
         var parameters = new Dictionary<string, object?>();
@@ -269,7 +273,7 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         AddIfNotNull(parameters, "@query_text_search", queryTextSearch);
         AddIfNotNull(parameters, "@query_text_search_not", queryTextSearchNot);
 
-        var formatOptions = BuildQueryReproBuilderOptions(includeQueryPlans, verbose);
+        var formatOptions = BuildQueryReproBuilderOptions(includeQueryPlans, verbose, maxRows);
         return await ExecuteProcedureAsync(serverName, "sp_QueryReproBuilder", parameters, formatOptions, cancellationToken);
     }
 
@@ -353,10 +357,10 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         };
     }
 
-    internal static ResultSetFormatOptions BuildHealthParserOptions(bool? includeQueryPlans, bool? includeXmlReports, bool? verbose)
+    internal static ResultSetFormatOptions BuildHealthParserOptions(bool? includeQueryPlans, bool? includeXmlReports, bool? verbose, int? maxRows = null)
     {
         if (verbose == true)
-            return new ResultSetFormatOptions { MaxStringLength = int.MaxValue };
+            return new ResultSetFormatOptions { MaxStringLength = int.MaxValue, MaxRowsOverride = maxRows };
 
         var excluded = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             { "deadlock_graph", "xml_deadlock_report", "blocked_process_report" };
@@ -374,18 +378,19 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
             TruncatedColumns = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
             {
                 ["query_text"] = 1000
-            }
+            },
+            MaxRowsOverride = maxRows
         };
     }
 
-    internal static ResultSetFormatOptions BuildLogHunterOptions(bool? verbose)
+    internal static ResultSetFormatOptions BuildLogHunterOptions(bool? verbose, int? maxRows = null)
     {
         if (verbose == true)
-            return new ResultSetFormatOptions { MaxStringLength = int.MaxValue };
+            return new ResultSetFormatOptions { MaxStringLength = int.MaxValue, MaxRowsOverride = maxRows };
 
         return new ResultSetFormatOptions
         {
-            MaxRowsOverride = 200,
+            MaxRowsOverride = maxRows ?? 200,
             TruncatedColumns = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
             {
                 ["text"] = 500
@@ -420,24 +425,25 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
         };
     }
 
-    internal static ResultSetFormatOptions BuildIndexCleanupOptions(bool? verbose)
+    internal static ResultSetFormatOptions BuildIndexCleanupOptions(bool? verbose, int? maxRows = null)
     {
         if (verbose == true)
-            return new ResultSetFormatOptions { MaxStringLength = int.MaxValue };
+            return new ResultSetFormatOptions { MaxStringLength = int.MaxValue, MaxRowsOverride = maxRows };
 
         return new ResultSetFormatOptions
         {
             TruncatedColumns = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
             {
                 ["original_index_definition"] = 500
-            }
+            },
+            MaxRowsOverride = maxRows
         };
     }
 
-    internal static ResultSetFormatOptions BuildQueryReproBuilderOptions(bool? includeQueryPlans, bool? verbose)
+    internal static ResultSetFormatOptions BuildQueryReproBuilderOptions(bool? includeQueryPlans, bool? verbose, int? maxRows = null)
     {
         if (verbose == true)
-            return new ResultSetFormatOptions { MaxStringLength = int.MaxValue };
+            return new ResultSetFormatOptions { MaxStringLength = int.MaxValue, MaxRowsOverride = maxRows };
 
         var excluded = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "query_plan" };
 
@@ -450,7 +456,8 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
             TruncatedColumns = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
             {
                 ["query_sql_text"] = 1000
-            }
+            },
+            MaxRowsOverride = maxRows
         };
     }
 }

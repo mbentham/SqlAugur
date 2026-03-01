@@ -47,6 +47,7 @@ public interface IFirstResponderService
         int? filter,
         bool? includeQueryPlans,
         bool? verbose,
+        int? maxRows,
         CancellationToken cancellationToken);
 
     Task<string> ExecuteBlitzWhoAsync(
@@ -81,5 +82,6 @@ public interface IFirstResponderService
         bool? includeXmlReports,
         bool? verbose,
         int? daysBack,
+        int? maxRows,
         CancellationToken cancellationToken);
 }

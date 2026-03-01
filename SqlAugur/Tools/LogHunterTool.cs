@@ -39,12 +39,14 @@ public sealed class LogHunterTool
         bool? firstLogOnly = null,
         [Description("Return all columns and full-length values with no truncation or row limits")]
         bool? verbose = null,
+        [Description("Maximum number of rows to return per result set (default 200)")]
+        int? maxRows = null,
         CancellationToken cancellationToken = default)
     {
         return await ToolHelper.ExecuteAsync(_rateLimiter, () =>
             _darlingDataService.ExecuteLogHunterAsync(
                 serverName, daysBack, startDate, endDate,
                 customMessage, customMessageOnly, firstLogOnly,
-                verbose, cancellationToken), cancellationToken);
+                verbose, maxRows, cancellationToken), cancellationToken);
     }
 }

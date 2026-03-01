@@ -43,12 +43,14 @@ public sealed class BlitzIndexTool
         bool? includeQueryPlans = null,
         [Description("Return all columns and full-length values with no truncation")]
         bool? verbose = null,
+        [Description("Maximum number of rows to return per result set")]
+        int? maxRows = null,
         CancellationToken cancellationToken = default)
     {
         return await ToolHelper.ExecuteAsync(_rateLimiter, () =>
             _frkService.ExecuteBlitzIndexAsync(
                 serverName, databaseName, schemaName, tableName,
                 getAllDatabases, mode, thresholdMb, filter,
-                includeQueryPlans, verbose, cancellationToken), cancellationToken);
+                includeQueryPlans, verbose, maxRows, cancellationToken), cancellationToken);
     }
 }

@@ -110,6 +110,7 @@ public sealed class FirstResponderService : StoredProcedureServiceBase, IFirstRe
         int? filter,
         bool? includeQueryPlans,
         bool? verbose,
+        int? maxRows,
         CancellationToken cancellationToken)
     {
         var parameters = new Dictionary<string, object?>();
@@ -121,7 +122,7 @@ public sealed class FirstResponderService : StoredProcedureServiceBase, IFirstRe
         AddIfNotNull(parameters, "@ThresholdMB", thresholdMb);
         AddIfNotNull(parameters, "@Filter", filter);
 
-        var formatOptions = BuildBlitzIndexOptions(includeQueryPlans, verbose);
+        var formatOptions = BuildBlitzIndexOptions(includeQueryPlans, verbose, maxRows);
         return await ExecuteProcedureAsync(serverName, "sp_BlitzIndex", parameters, formatOptions, cancellationToken);
     }
 
@@ -173,6 +174,7 @@ public sealed class FirstResponderService : StoredProcedureServiceBase, IFirstRe
         bool? includeXmlReports,
         bool? verbose,
         int? daysBack,
+        int? maxRows,
         CancellationToken cancellationToken)
     {
         var parameters = new Dictionary<string, object?>();
@@ -187,7 +189,7 @@ public sealed class FirstResponderService : StoredProcedureServiceBase, IFirstRe
         AddBoolParam(parameters, "@VictimsOnly", victimsOnly);
         AddIfNotNull(parameters, "@EventSessionName", eventSessionName);
 
-        var formatOptions = BuildBlitzLockOptions(includeQueryPlans, includeXmlReports, verbose);
+        var formatOptions = BuildBlitzLockOptions(includeQueryPlans, includeXmlReports, verbose, maxRows);
         return await ExecuteProcedureAsync(serverName, "sp_BlitzLock", parameters, formatOptions, cancellationToken);
     }
 
@@ -309,10 +311,10 @@ public sealed class FirstResponderService : StoredProcedureServiceBase, IFirstRe
         };
     }
 
-    internal static ResultSetFormatOptions BuildBlitzIndexOptions(bool? includeQueryPlans, bool? verbose)
+    internal static ResultSetFormatOptions BuildBlitzIndexOptions(bool? includeQueryPlans, bool? verbose, int? maxRows = null)
     {
         if (verbose == true)
-            return new ResultSetFormatOptions { MaxStringLength = int.MaxValue };
+            return new ResultSetFormatOptions { MaxStringLength = int.MaxValue, MaxRowsOverride = maxRows };
 
         var excluded = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             { "sample_query_plan", "more_info", "blitz_result_id", "check_id", "index_sanity_id" };
@@ -329,7 +331,8 @@ public sealed class FirstResponderService : StoredProcedureServiceBase, IFirstRe
                     ["details"] = 2000,
                     ["index_definition"] = 500,
                     ["secret_columns"] = 500
-                }
+                },
+                MaxRowsOverride = maxRows
             };
         }
 
@@ -342,7 +345,8 @@ public sealed class FirstResponderService : StoredProcedureServiceBase, IFirstRe
                 ["details"] = 2000,
                 ["index_definition"] = 500,
                 ["secret_columns"] = 500
-            }
+            },
+            MaxRowsOverride = maxRows
         };
     }
 
@@ -388,10 +392,10 @@ public sealed class FirstResponderService : StoredProcedureServiceBase, IFirstRe
         };
     }
 
-    internal static ResultSetFormatOptions BuildBlitzLockOptions(bool? includeQueryPlans, bool? includeXmlReports, bool? verbose)
+    internal static ResultSetFormatOptions BuildBlitzLockOptions(bool? includeQueryPlans, bool? includeXmlReports, bool? verbose, int? maxRows = null)
     {
         if (verbose == true)
-            return new ResultSetFormatOptions { MaxStringLength = int.MaxValue };
+            return new ResultSetFormatOptions { MaxStringLength = int.MaxValue, MaxRowsOverride = maxRows };
 
         var excluded = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             { "deadlock_graph", "process_xml", "parallel_deadlock_details", "query_plan" };
@@ -415,7 +419,8 @@ public sealed class FirstResponderService : StoredProcedureServiceBase, IFirstRe
                 ["query_xml"] = 500,
                 ["object_names"] = 500,
                 ["finding"] = 2000
-            }
+            },
+            MaxRowsOverride = maxRows
         };
     }
 }

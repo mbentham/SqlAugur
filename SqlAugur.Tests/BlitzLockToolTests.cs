@@ -89,6 +89,14 @@ public class BlitzLockToolTests
     }
 
     [Fact]
+    public async Task MaxRows_PassedThrough()
+    {
+        await _tool.BlitzLock("srv", maxRows: 50, cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(50, _stub.CapturedMaxRows);
+    }
+
+    [Fact]
     public async Task DefaultsAreNull()
     {
         await _tool.BlitzLock("srv", cancellationToken: TestContext.Current.CancellationToken);
@@ -97,6 +105,7 @@ public class BlitzLockToolTests
         Assert.Null(_stub.CapturedIncludeQueryPlans);
         Assert.Null(_stub.CapturedIncludeXmlReports);
         Assert.Null(_stub.CapturedVerbose);
+        Assert.Null(_stub.CapturedMaxRows);
     }
 
     private sealed class StubFirstResponderService : IFirstResponderService
@@ -107,6 +116,7 @@ public class BlitzLockToolTests
         public bool? CapturedIncludeQueryPlans { get; private set; }
         public bool? CapturedIncludeXmlReports { get; private set; }
         public bool? CapturedVerbose { get; private set; }
+        public int? CapturedMaxRows { get; private set; }
         public Exception? ExceptionToThrow { get; set; }
 
         public Task<string> ExecuteBlitzLockAsync(
@@ -115,7 +125,7 @@ public class BlitzLockToolTests
             string? objectName, string? storedProcName,
             string? appName, string? hostName, string? loginName,
             bool? victimsOnly, string? eventSessionName,
-            bool? includeQueryPlans, bool? includeXmlReports, bool? verbose, int? daysBack,
+            bool? includeQueryPlans, bool? includeXmlReports, bool? verbose, int? daysBack, int? maxRows,
             CancellationToken cancellationToken)
         {
             if (ExceptionToThrow is not null)
@@ -127,6 +137,7 @@ public class BlitzLockToolTests
             CapturedIncludeQueryPlans = includeQueryPlans;
             CapturedIncludeXmlReports = includeXmlReports;
             CapturedVerbose = verbose;
+            CapturedMaxRows = maxRows;
             return Task.FromResult("ok");
         }
 
@@ -139,7 +150,7 @@ public class BlitzLockToolTests
         public Task<string> ExecuteBlitzCacheAsync(string serverName, string? sortOrder, int? top, bool? expertMode, string? databaseName, string? slowlySearchPlansFor, bool? exportToExcel, bool? includeQueryPlans, bool? verbose, CancellationToken cancellationToken)
             => throw new NotImplementedException();
 
-        public Task<string> ExecuteBlitzIndexAsync(string serverName, string? databaseName, string? schemaName, string? tableName, bool? getAllDatabases, int? mode, int? thresholdMb, int? filter, bool? includeQueryPlans, bool? verbose, CancellationToken cancellationToken)
+        public Task<string> ExecuteBlitzIndexAsync(string serverName, string? databaseName, string? schemaName, string? tableName, bool? getAllDatabases, int? mode, int? thresholdMb, int? filter, bool? includeQueryPlans, bool? verbose, int? maxRows, CancellationToken cancellationToken)
             => throw new NotImplementedException();
 
         public Task<string> ExecuteBlitzWhoAsync(string serverName, bool? expertMode, bool? showSleepingSpids, int? minElapsedSeconds, int? minCpuTime, int? minLogicalReads, int? minBlockingSeconds, int? minTempdbMb, bool? showActualParameters, bool? getLiveQueryPlan, string? sortOrder, bool? includeQueryPlans, bool? verbose, CancellationToken cancellationToken)

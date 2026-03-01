@@ -54,6 +54,8 @@ public sealed class BlitzLockTool
         bool? verbose = null,
         [Description("Number of days back to search for deadlocks (default 1). Used when startDate is not provided.")]
         int? daysBack = null,
+        [Description("Maximum number of rows to return per result set")]
+        int? maxRows = null,
         CancellationToken cancellationToken = default)
     {
         DateTime? parsedStart = null;
@@ -78,7 +80,7 @@ public sealed class BlitzLockTool
                 serverName, databaseName, parsedStart, parsedEnd,
                 objectName, storedProcName, appName, hostName,
                 loginName, victimsOnly, eventSessionName,
-                includeQueryPlans, includeXmlReports, verbose, daysBack,
+                includeQueryPlans, includeXmlReports, verbose, daysBack, maxRows,
                 cancellationToken), cancellationToken);
     }
 }

@@ -124,7 +124,7 @@ public class DarlingDataServiceTests
     public async Task HealthParser_UnknownServer_ThrowsArgumentException()
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ExecuteHealthParserAsync("bad", null, null, null, null, null, null, null, null, null, null, null, null, CancellationToken.None));
+            _service.ExecuteHealthParserAsync("bad", null, null, null, null, null, null, null, null, null, null, null, null, null, CancellationToken.None));
         Assert.Contains("bad", ex.Message);
     }
 
@@ -132,7 +132,7 @@ public class DarlingDataServiceTests
     public async Task LogHunter_UnknownServer_ThrowsArgumentException()
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ExecuteLogHunterAsync("bad", null, null, null, null, null, null, null, CancellationToken.None));
+            _service.ExecuteLogHunterAsync("bad", null, null, null, null, null, null, null, null, CancellationToken.None));
         Assert.Contains("bad", ex.Message);
     }
 
@@ -148,7 +148,7 @@ public class DarlingDataServiceTests
     public async Task IndexCleanup_UnknownServer_ThrowsArgumentException()
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ExecuteIndexCleanupAsync("bad", null, null, null, null, null, null, null, null, null, null, CancellationToken.None));
+            _service.ExecuteIndexCleanupAsync("bad", null, null, null, null, null, null, null, null, null, null, null, CancellationToken.None));
         Assert.Contains("bad", ex.Message);
     }
 
@@ -156,7 +156,7 @@ public class DarlingDataServiceTests
     public async Task QueryReproBuilder_UnknownServer_ThrowsArgumentException()
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ExecuteQueryReproBuilderAsync("bad", null, null, null, null, null, null, null, null, null, null, null, null, null, CancellationToken.None));
+            _service.ExecuteQueryReproBuilderAsync("bad", null, null, null, null, null, null, null, null, null, null, null, null, null, null, CancellationToken.None));
         Assert.Contains("bad", ex.Message);
     }
 

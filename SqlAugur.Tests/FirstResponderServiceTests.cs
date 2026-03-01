@@ -126,7 +126,7 @@ public class FirstResponderServiceTests
     public async Task BlitzIndex_UnknownServer_ThrowsArgumentException()
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ExecuteBlitzIndexAsync("bad", null, null, null, null, null, null, null, null, null, CancellationToken.None));
+            _service.ExecuteBlitzIndexAsync("bad", null, null, null, null, null, null, null, null, null, null, CancellationToken.None));
         Assert.Contains("bad", ex.Message);
     }
 
@@ -142,7 +142,7 @@ public class FirstResponderServiceTests
     public async Task BlitzLock_UnknownServer_ThrowsArgumentException()
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ExecuteBlitzLockAsync("bad", null, null, null, null, null, null, null, null, null, null, null, null, null, null, CancellationToken.None));
+            _service.ExecuteBlitzLockAsync("bad", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, CancellationToken.None));
         Assert.Contains("bad", ex.Message);
     }
 

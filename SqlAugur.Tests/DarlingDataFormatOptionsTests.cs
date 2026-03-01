@@ -51,6 +51,10 @@ public class DarlingDataFormatOptionsTests
         Assert.Contains("min_duration_ms", options.ExcludedColumns);
         Assert.Contains("max_cpu_time_ms", options.ExcludedColumns);
         Assert.Contains("total_logical_io_reads", options.ExcludedColumns);
+        Assert.Contains("min_spills", options.ExcludedColumns);
+        // Verify no double-prefixed columns exist
+        Assert.DoesNotContain("min_min_spills", options.ExcludedColumns);
+        Assert.DoesNotContain("min_min_grant_mb", options.ExcludedColumns);
         Assert.Equal(1000, options.TruncatedColumns["query_sql_text"]);
     }
 
@@ -93,7 +97,17 @@ public class DarlingDataFormatOptionsTests
         Assert.Contains("deadlock_graph", options.ExcludedColumns);
         Assert.Contains("xml_deadlock_report", options.ExcludedColumns);
         Assert.Contains("blocked_process_report", options.ExcludedColumns);
+        Assert.Contains("query_plan", options.ExcludedColumns);
         Assert.Equal(1000, options.TruncatedColumns["query_text"]);
+    }
+
+    [Fact]
+    public void HealthParser_IncludeQueryPlans_KeepsQueryPlan()
+    {
+        var options = DarlingDataService.BuildHealthParserOptions(includeQueryPlans: true, null, null);
+
+        Assert.DoesNotContain("query_plan", options.ExcludedColumns);
+        Assert.Contains("deadlock_graph", options.ExcludedColumns);
     }
 
     [Fact]
@@ -101,7 +115,10 @@ public class DarlingDataFormatOptionsTests
     {
         var options = DarlingDataService.BuildHealthParserOptions(null, includeXmlReports: true, null);
 
-        Assert.Empty(options.ExcludedColumns);
+        Assert.DoesNotContain("deadlock_graph", options.ExcludedColumns);
+        Assert.DoesNotContain("xml_deadlock_report", options.ExcludedColumns);
+        Assert.DoesNotContain("blocked_process_report", options.ExcludedColumns);
+        Assert.Contains("query_plan", options.ExcludedColumns);
     }
 
     [Fact]
@@ -228,6 +245,14 @@ public class DarlingDataFormatOptionsTests
     {
         var options = DarlingDataService.BuildHealthParserOptions(null, null, null, maxRows: 50);
         Assert.Equal(50, options.MaxRowsOverride);
+    }
+
+    [Fact]
+    public void HealthParser_Verbose_WithMaxRows_SetsMaxRowsOverride()
+    {
+        var options = DarlingDataService.BuildHealthParserOptions(null, null, verbose: true, maxRows: 25);
+        Assert.Equal(int.MaxValue, options.MaxStringLength);
+        Assert.Equal(25, options.MaxRowsOverride);
     }
 
     [Fact]

@@ -8,13 +8,13 @@
     "url": "https://github.com/mbentham/SqlAugur",
     "source": "github"
   },
-  "version": "1.3.1",
+  "version": "1.4.0",
   "packages": [
     {
       "registryType": "nuget",
       "registryBaseUrl": "https://api.nuget.org/v3/index.json",
       "identifier": "SqlAugur",
-      "version": "1.3.1",
+      "version": "1.4.0",
       "runtimeHint": "dnx",
       "transport": {
         "type": "stdio"

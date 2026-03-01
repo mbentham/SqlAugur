@@ -202,21 +202,12 @@ public sealed class FirstResponderService : StoredProcedureServiceBase, IFirstRe
         if (verbose == true)
             return new ResultSetFormatOptions { MaxStringLength = int.MaxValue };
 
-        var excluded = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-            { "QueryPlan", "QueryPlanFiltered" };
+        var excluded = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        if (includeQueryPlans == true)
+        if (includeQueryPlans != true)
         {
-            excluded.Remove("QueryPlan");
-            excluded.Remove("QueryPlanFiltered");
-            return new ResultSetFormatOptions
-            {
-                ExcludedColumns = excluded,
-                TruncatedColumns = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
-                {
-                    ["Details"] = 2000
-                }
-            };
+            excluded.Add("QueryPlan");
+            excluded.Add("QueryPlanFiltered");
         }
 
         return new ResultSetFormatOptions

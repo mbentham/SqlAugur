@@ -135,11 +135,21 @@ public class FirstResponderFormatOptionsTests
     }
 
     [Fact]
+    public void Blitz_IncludeQueryPlans_KeepsPlanColumns()
+    {
+        var options = FirstResponderService.BuildBlitzOptions(includeQueryPlans: true, verbose: null);
+
+        Assert.Empty(options.ExcludedColumns);
+        Assert.Equal(2000, options.TruncatedColumns["Details"]);
+    }
+
+    [Fact]
     public void Blitz_Verbose_ReturnsEmptyExclusions()
     {
         var options = FirstResponderService.BuildBlitzOptions(null, verbose: true);
 
         Assert.Empty(options.ExcludedColumns);
+        Assert.Empty(options.TruncatedColumns);
         Assert.Equal(int.MaxValue, options.MaxStringLength);
     }
 
@@ -253,6 +263,7 @@ public class FirstResponderFormatOptionsTests
     public void BlitzIndex_Verbose_WithMaxRows_SetsMaxRowsOverride()
     {
         var options = FirstResponderService.BuildBlitzIndexOptions(null, verbose: true, maxRows: 25);
+        Assert.Equal(int.MaxValue, options.MaxStringLength);
         Assert.Equal(25, options.MaxRowsOverride);
     }
 

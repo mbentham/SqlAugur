@@ -29,7 +29,7 @@ public sealed class SchemaExplorationServiceIntegrationTests
             CancellationToken.None);
 
         var objects = JsonDocument.Parse(result).RootElement;
-        Assert.True(objects.GetArrayLength() >= 3);
+        Assert.True(objects.GetArrayLength() >= 4);
 
         var names = objects.EnumerateArray()
             .Select(o => o.GetProperty("name").GetString())

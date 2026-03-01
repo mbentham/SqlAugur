@@ -326,9 +326,7 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
                     "grant_kb", "used_grant_kb", "ideal_grant_kb",
                     "reserved_threads", "used_threads",
                     "columnstore_segment_reads", "columnstore_segment_skips",
-                    "spills", "grant_mb", "used_grant_mb",
-                    "min_columnstore_segment_reads", "min_columnstore_segment_skips",
-                    "min_spills", "min_grant_mb", "min_used_grant_mb"
+                    "spills", "grant_mb", "used_grant_mb"
                 })
                 {
                     excluded.Add(prefix + metric);
@@ -363,7 +361,10 @@ public sealed class DarlingDataService : StoredProcedureServiceBase, IDarlingDat
             return new ResultSetFormatOptions { MaxStringLength = int.MaxValue, MaxRowsOverride = maxRows };
 
         var excluded = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-            { "deadlock_graph", "xml_deadlock_report", "blocked_process_report" };
+            { "deadlock_graph", "xml_deadlock_report", "blocked_process_report", "query_plan" };
+
+        if (includeQueryPlans == true)
+            excluded.Remove("query_plan");
 
         if (includeXmlReports == true)
         {

@@ -112,6 +112,10 @@ Add to `.vscode/mcp.json` in your workspace:
 
 For Docker, Podman, and other install methods, see [Installation](#installation).
 
+## Hosted deployment
+
+A hosted deployment is available on [Fronteir AI](https://fronteir.ai/mcp/mbentham-sqlaugur).
+
 ## Why This Approach
 
 - **AST-level query validation** — Most MCP database servers use keyword blocking or no validation at all. This project parses every query into a full syntax tree using Microsoft's official `TSql170Parser`. Comment injection, string literal tricks, and encoding bypasses are blocked at the syntax level, not with fragile regex patterns.

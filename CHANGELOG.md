@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-04-23
+
 ### Added
 - `sp_blitz_plan_compare` tool — runs Brent Ozar's `sp_BlitzPlanCompare` across two SQL Server instances without using linked servers. Captures a plan snapshot on one server and passes it to the compare call on a second server via a strongly-typed `@CompareToXML` parameter. Requires the First Responder Kit `demon_hunters` branch installed on both servers until it merges to main.
 
@@ -103,7 +105,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - Integration tests with Testcontainers and Podman (SQL Server 2025)
 - Security guide (SECURITY.md) with credential management and SQL account hardening
 
-[Unreleased]: https://github.com/mbentham/SqlAugur/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/mbentham/SqlAugur/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/mbentham/SqlAugur/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/mbentham/SqlAugur/compare/v1.3.1...v1.4.0
 [1.3.1]: https://github.com/mbentham/SqlAugur/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/mbentham/SqlAugur/compare/v1.2.0...v1.3.0

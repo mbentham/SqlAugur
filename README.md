@@ -462,7 +462,7 @@ Use Windows Authentication or Azure Managed Identity where possible to avoid sto
 
 ### Known Risks
 
-- This project depends on the official Microsoft [MCP C# SDK](https://github.com/modelcontextprotocol/csharp-sdk) (`ModelContextProtocol` NuGet package) which is currently a prerelease version. Prerelease packages may contain undiscovered security vulnerabilities and receive breaking changes. As the MCP framework handles all protocol I/O, any vulnerability in it directly affects this application's security boundary. Monitor the package for stable releases and upgrade when available.
+- This project depends on the official Microsoft [MCP C# SDK](https://github.com/modelcontextprotocol/csharp-sdk) (`ModelContextProtocol` NuGet package, version 1.2.0). As the MCP framework handles all protocol I/O, any vulnerability in it directly affects this application's security boundary. Monitor the package for updates and upgrade when new versions are released.
 - The data returned from a SQL Server query could include malicious prompt injection targeting AIs. This is a risk of all AI use and cannot be mitigated by this project. Ensure you're following best practices for AI security and only connecting to trusted data sources.
 
 ## Contributing

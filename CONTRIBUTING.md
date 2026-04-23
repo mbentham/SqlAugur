@@ -49,7 +49,7 @@ SqlAugur/
 
 ### Key Components
 
-- **QueryValidator** — Static class using `TSql170Parser` to parse queries into a full AST. Uses the visitor pattern (`ForbiddenNodeVisitor`) to reject non-SELECT statements, SELECT INTO, external data access (OPENROWSET/OPENQUERY/OPENDATASOURCE), linked server references, and MAXRECURSION hints. This is the core security mechanism — AST-based validation, not regex.
+- **QueryValidator** — Static class using `TSql180Parser` to parse queries into a full AST. Uses the visitor pattern (`ForbiddenNodeVisitor`) to reject non-SELECT statements, SELECT INTO, external data access (OPENROWSET and its Cosmos/internal variants, OPENQUERY, OPENDATASOURCE, OPENXML), linked server references, and MAXRECURSION hints. This is the core security mechanism — AST-based validation, not regex.
 
 - **ToolRegistry** — Defines tool groupings: Core (6), Schema Exploration (4), Diagrams (2), First Responder Kit (6), DarlingData (7), WhoIsActive (1), Discovery (3). `GetToolTypes()` returns the appropriate set based on config flags and dynamic mode.
 

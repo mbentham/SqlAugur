@@ -114,7 +114,7 @@ For Docker, Podman, and other install methods, see [Installation](#installation)
 
 ## Why This Approach
 
-- **AST-level query validation** — Most MCP database servers use keyword blocking or no validation at all. This project parses every query into a full syntax tree using Microsoft's official `TSql170Parser`. Comment injection, string literal tricks, and encoding bypasses are blocked at the syntax level, not with fragile regex patterns.
+- **AST-level query validation** — Most MCP database servers use keyword blocking or no validation at all. This project parses every query into a full syntax tree using Microsoft's official `TSql180Parser`. Comment injection, string literal tricks, and encoding bypasses are blocked at the syntax level, not with fragile regex patterns.
 
 - **Rate limiting** — Token bucket throughput limiting and concurrency control prevent runaway AI query loops from overwhelming production SQL Servers. No other MCP database server offers this.
 
@@ -432,12 +432,12 @@ In static mode (`EnableDynamicToolsets: false`), all enabled toolsets load at st
 
 ### Query Validation
 
-Every query is parsed into an [Abstract Syntax Tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree) (AST) using Microsoft's official `TSql170Parser` and must pass these rules:
+Every query is parsed into an [Abstract Syntax Tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree) (AST) using Microsoft's official `TSql180Parser` and must pass these rules:
 
 - **Single statement only** — multiple statements are rejected
 - **SELECT only** — INSERT, UPDATE, DELETE, DROP, EXEC, CREATE, ALTER, and all other statement types are blocked
 - **No SELECT INTO** — prevents table creation via SELECT
-- **No external data access** — OPENROWSET, OPENQUERY, OPENDATASOURCE, OPENXML blocked
+- **No external data access** — OPENROWSET (all variants including BULK, Cosmos DB, and internal), OPENQUERY, OPENDATASOURCE, OPENXML blocked
 - **No linked servers** — four-part name references are rejected
 - **No MAXRECURSION hint** — prevents overriding the default recursion limit
 - **Cross-database queries are allowed** — three-part names work by design; the security boundary is the server, not the database. To restrict to a single database, limit the login's permissions.

@@ -9,6 +9,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ### Added
 - `sp_blitz_plan_compare` tool — runs Brent Ozar's `sp_BlitzPlanCompare` across two SQL Server instances without using linked servers. Captures a plan snapshot on one server and passes it to the compare call on a second server via a strongly-typed `@CompareToXML` parameter. Requires the First Responder Kit `demon_hunters` branch installed on both servers until it merges to main.
 
+### Changed
+- Upgraded T-SQL parser from `TSql170Parser` to `TSql180Parser` (ScriptDom 170.157.0 → 180.6.0), enabling parse coverage of SQL Server 2022/2025-generation syntax
+- Upgraded `Microsoft.Data.SqlClient` 6.1.4 → 7.0.0
+- Upgraded `ModelContextProtocol` 0.8.0-preview.1 → 1.2.0 (first stable GA release), closing the preview-SDK caveat previously called out in README Known Risks
+- Upgraded `coverlet.collector` 8.0.0 → 10.0.0 and `Microsoft.NET.Test.Sdk` 18.0.1 → 18.4.0 (test tooling)
+- Bumped `Azure.Extensions.AspNetCore.Configuration.Secrets` 1.4.0 → 1.5.0, `Microsoft.Extensions.Hosting` 10.0.3 → 10.0.7, `System.Threading.RateLimiting` 10.0.3 → 10.0.7, `Testcontainers` 4.10.0 → 4.11.0
+
+### Security
+- Block `OPENROWSET BULK` via new `BulkOpenRowset` AST visitor override (previously `OPENROWSET(BULK …, SINGLE_CLOB)` file-read syntax was not explicitly blocked at the AST level)
+- Block `OPENROWSET` against external providers (Cosmos DB etc., `OpenRowsetCosmos`) and internal `OPENROWSET` variants (`InternalOpenRowset`) — new AST types exposed by the ScriptDom 180 upgrade
+
 ## [1.4.0] - 2026-03-01
 
 ### Added

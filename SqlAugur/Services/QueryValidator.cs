@@ -17,7 +17,7 @@ public static class QueryValidator
             return "Query exceeds maximum allowed length (1,000,000 characters).";
 
         // Parse with the official T-SQL parser
-        var parser = new TSql170Parser(initialQuotedIdentifiers: true);
+        var parser = new TSql180Parser(initialQuotedIdentifiers: true);
         using var reader = new StringReader(query);
         var fragment = parser.Parse(reader, out var parseErrors);
 

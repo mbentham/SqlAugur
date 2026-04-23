@@ -163,7 +163,7 @@ public class ToolsetManagerTests
 
         Assert.Contains("sp_blitz", toolNames);
         Assert.Contains("sp_blitz_cache", toolNames);
-        Assert.Equal(6, frk.GetProperty("toolCount").GetInt32());
+        Assert.Equal(7, frk.GetProperty("toolCount").GetInt32());
     }
 
     // ───────────────────────────────────────────────
@@ -255,7 +255,7 @@ public class ToolsetManagerTests
         var parsed = JsonDocument.Parse(result).RootElement;
 
         Assert.Equal("enabled", parsed.GetProperty("status").GetString());
-        Assert.Equal(6, mcpOptions.ToolCollection.Count);
+        Assert.Equal(7, mcpOptions.ToolCollection.Count);
     }
 
     [Fact]
@@ -282,7 +282,7 @@ public class ToolsetManagerTests
 
         Assert.Equal("already_enabled", parsed.GetProperty("status").GetString());
         // Should not double-add tools
-        Assert.Equal(6, mcpOptions.ToolCollection.Count);
+        Assert.Equal(7, mcpOptions.ToolCollection.Count);
     }
 
     [Fact]
@@ -304,7 +304,7 @@ public class ToolsetManagerTests
             sp);
 
         manager.EnableToolset("first_responder_kit");
-        Assert.Equal(6, mcpOptions.ToolCollection.Count);
+        Assert.Equal(7, mcpOptions.ToolCollection.Count);
     }
 
     [Fact]
@@ -347,7 +347,7 @@ public class ToolsetManagerTests
 
         manager.EnableToolset("first_responder_kit");
         manager.EnableToolset("whoisactive");
-        Assert.Equal(7, mcpOptions.ToolCollection.Count);
+        Assert.Equal(8, mcpOptions.ToolCollection.Count);
     }
 
     [Fact]
@@ -365,7 +365,7 @@ public class ToolsetManagerTests
         var toolNames = parsed.GetProperty("tools").EnumerateArray()
             .Select(t => t.GetString()).ToList();
 
-        Assert.Equal(6, toolNames.Count);
+        Assert.Equal(7, toolNames.Count);
         Assert.Contains("sp_blitz", toolNames);
         Assert.Contains("sp_blitz_first", toolNames);
         Assert.Contains("sp_blitz_cache", toolNames);

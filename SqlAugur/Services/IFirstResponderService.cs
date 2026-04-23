@@ -84,4 +84,15 @@ public interface IFirstResponderService
         int? daysBack,
         int? maxRows,
         CancellationToken cancellationToken);
+
+    Task<string> ExecuteBlitzPlanCompareAsync(
+        string captureServerName,
+        string compareServerName,
+        byte[]? queryPlanHash,
+        byte[]? queryHash,
+        string? storedProcName,
+        string? databaseName,
+        bool? includeQueryPlans,
+        bool? verbose,
+        CancellationToken cancellationToken);
 }

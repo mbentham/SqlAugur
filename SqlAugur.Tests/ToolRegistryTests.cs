@@ -65,12 +65,13 @@ public class ToolRegistryTests
         Assert.Contains(typeof(BlitzIndexTool), ToolRegistry.FirstResponderKitTools);
         Assert.Contains(typeof(BlitzWhoTool), ToolRegistry.FirstResponderKitTools);
         Assert.Contains(typeof(BlitzLockTool), ToolRegistry.FirstResponderKitTools);
+        Assert.Contains(typeof(BlitzPlanCompareTool), ToolRegistry.FirstResponderKitTools);
     }
 
     [Fact]
     public void FirstResponderKitTools_HasExactCount()
     {
-        Assert.Equal(6, ToolRegistry.FirstResponderKitTools.Length);
+        Assert.Equal(7, ToolRegistry.FirstResponderKitTools.Length);
     }
 
     [Fact]
@@ -175,12 +176,12 @@ public class ToolRegistryTests
     }
 
     [Fact]
-    public void GetToolTypes_FirstResponderKitOnly_Returns18()
+    public void GetToolTypes_FirstResponderKitOnly_Returns19()
     {
         var types = ToolRegistry.GetToolTypes(
             enableFirstResponderKit: true, enableDarlingData: false, enableWhoIsActive: false).ToList();
 
-        Assert.Equal(18, types.Count);
+        Assert.Equal(19, types.Count);
         Assert.Contains(typeof(BlitzTool), types);
         Assert.DoesNotContain(typeof(PressureDetectorTool), types);
         Assert.DoesNotContain(typeof(WhoIsActiveTool), types);
@@ -216,7 +217,7 @@ public class ToolRegistryTests
         var types = ToolRegistry.GetToolTypes(
             enableFirstResponderKit: true, enableDarlingData: true, enableWhoIsActive: true).ToList();
 
-        Assert.Equal(26, types.Count);
+        Assert.Equal(27, types.Count);
     }
 
     // ───────────────────────────────────────────────
@@ -281,7 +282,7 @@ public class ToolRegistryTests
         var types = ToolRegistry.GetToolTypes(
             enableFirstResponderKit: true, enableDarlingData: false, enableWhoIsActive: false).ToList();
 
-        Assert.Equal(18, types.Count);
+        Assert.Equal(19, types.Count);
         Assert.Contains(typeof(BlitzTool), types);
         Assert.DoesNotContain(typeof(DiscoveryTools), types);
     }

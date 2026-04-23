@@ -155,5 +155,8 @@ public class BlitzLockToolTests
 
         public Task<string> ExecuteBlitzWhoAsync(string serverName, bool? expertMode, bool? showSleepingSpids, int? minElapsedSeconds, int? minCpuTime, int? minLogicalReads, int? minBlockingSeconds, int? minTempdbMb, bool? showActualParameters, bool? getLiveQueryPlan, string? sortOrder, bool? includeQueryPlans, bool? verbose, CancellationToken cancellationToken)
             => throw new NotImplementedException();
+
+        public Task<string> ExecuteBlitzPlanCompareAsync(string captureServerName, string compareServerName, byte[]? queryPlanHash, byte[]? queryHash, string? storedProcName, string? databaseName, bool? includeQueryPlans, bool? verbose, CancellationToken cancellationToken)
+            => throw new NotImplementedException();
     }
 }

@@ -27,7 +27,7 @@ internal sealed class ToolsetManager : IToolsetManager
             ToolRegistry.DiagramTools),
         ["first_responder_kit"] = new(
             "first_responder_kit",
-            "Brent Ozar's First Responder Kit — sp_Blitz, sp_BlitzFirst, sp_BlitzCache, sp_BlitzIndex, sp_BlitzWho, sp_BlitzLock for SQL Server health checks, performance analysis, and diagnostics.",
+            "Brent Ozar's First Responder Kit — sp_Blitz, sp_BlitzFirst, sp_BlitzCache, sp_BlitzIndex, sp_BlitzWho, sp_BlitzLock, sp_BlitzPlanCompare for SQL Server health checks, performance analysis, and diagnostics.",
             opts => opts.EnableFirstResponderKit,
             ToolRegistry.FirstResponderKitTools),
         ["darling_data"] = new(

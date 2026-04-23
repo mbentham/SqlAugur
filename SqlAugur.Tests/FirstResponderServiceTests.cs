@@ -35,6 +35,7 @@ public class FirstResponderServiceTests
     [InlineData("sp_BlitzIndex")]
     [InlineData("sp_BlitzWho")]
     [InlineData("sp_BlitzLock")]
+    [InlineData("sp_BlitzPlanCompare")]
     public void AllowedProcedure_IsInWhitelist(string procedureName)
     {
         Assert.Contains(procedureName, FirstResponderService.AllowedProcedures);
@@ -74,6 +75,7 @@ public class FirstResponderServiceTests
     [InlineData("@OutputTableNamePerfmonStats")]
     [InlineData("@OutputTableNameWaitStats")]
     [InlineData("@OutputTableRetentionDays")]
+    [InlineData("@LinkedServer")]
     public void BlockedParameter_IsInBlockList(string parameterName)
     {
         Assert.Contains(FirstResponderService.BlockedParameters,
@@ -151,14 +153,14 @@ public class FirstResponderServiceTests
     // ───────────────────────────────────────────────
 
     [Fact]
-    public void AllowedProcedures_HasExactly6Entries()
+    public void AllowedProcedures_HasExactly7Entries()
     {
-        Assert.Equal(6, FirstResponderService.AllowedProcedures.Count);
+        Assert.Equal(7, FirstResponderService.AllowedProcedures.Count);
     }
 
     [Fact]
     public void BlockedParameters_HasExpectedCount()
     {
-        Assert.Equal(8, FirstResponderService.BlockedParameters.Length);
+        Assert.Equal(9, FirstResponderService.BlockedParameters.Length);
     }
 }

@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Added
+- `sp_blitz_plan_compare` tool — runs Brent Ozar's `sp_BlitzPlanCompare` across two SQL Server instances without using linked servers. Captures a plan snapshot on one server and passes it to the compare call on a second server via a strongly-typed `@CompareToXML` parameter. Requires the First Responder Kit `demon_hunters` branch installed on both servers until it merges to main.
+
 ## [1.4.0] - 2026-03-01
 
 ### Added

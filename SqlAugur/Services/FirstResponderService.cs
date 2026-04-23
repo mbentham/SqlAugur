@@ -1,3 +1,8 @@
+using System.Data;
+using System.Data.SqlTypes;
+using System.Xml;
+using System.Xml.Linq;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SqlAugur.Configuration;
@@ -9,7 +14,8 @@ public sealed class FirstResponderService : StoredProcedureServiceBase, IFirstRe
     internal static readonly HashSet<string> AllowedProcedures = new(StringComparer.OrdinalIgnoreCase)
     {
         "sp_Blitz", "sp_BlitzFirst", "sp_BlitzCache",
-        "sp_BlitzIndex", "sp_BlitzWho", "sp_BlitzLock"
+        "sp_BlitzIndex", "sp_BlitzWho", "sp_BlitzLock",
+        "sp_BlitzPlanCompare"
     };
 
     internal static readonly string[] BlockedParameters =
@@ -17,7 +23,8 @@ public sealed class FirstResponderService : StoredProcedureServiceBase, IFirstRe
         "@OutputDatabaseName", "@OutputSchemaName", "@OutputTableName",
         "@OutputServerName", "@OutputTableNameFileStats",
         "@OutputTableNamePerfmonStats", "@OutputTableNameWaitStats",
-        "@OutputTableRetentionDays"
+        "@OutputTableRetentionDays",
+        "@LinkedServer"
     ];
 
     public FirstResponderService(
@@ -191,6 +198,149 @@ public sealed class FirstResponderService : StoredProcedureServiceBase, IFirstRe
 
         var formatOptions = BuildBlitzLockOptions(includeQueryPlans, includeXmlReports, verbose, maxRows);
         return await ExecuteProcedureAsync(serverName, "sp_BlitzLock", parameters, formatOptions, cancellationToken);
+    }
+
+    public async Task<string> ExecuteBlitzPlanCompareAsync(
+        string captureServerName,
+        string compareServerName,
+        byte[]? queryPlanHash,
+        byte[]? queryHash,
+        string? storedProcName,
+        string? databaseName,
+        bool? includeQueryPlans,
+        bool? verbose,
+        CancellationToken cancellationToken)
+    {
+        var captureParams = BuildCaptureParameters(
+            queryPlanHash, queryHash, storedProcName, databaseName);
+
+        var callStack = await CaptureSnapshotAsync(
+            captureServerName, captureParams, cancellationToken);
+
+        var snapshotXml = ExtractSnapshotXml(callStack);
+
+        // Reader consumed lazily by SqlClient during ExecuteReaderAsync; do not dispose here.
+        var compareParams = new Dictionary<string, object?>
+        {
+            ["@CompareToXML"] = new SqlXml(XmlReader.Create(new StringReader(snapshotXml)))
+        };
+
+        var formatOptions = BuildBlitzPlanCompareOptions(includeQueryPlans, verbose);
+
+        return await ExecuteProcedureAsync(
+            compareServerName, "sp_BlitzPlanCompare", compareParams,
+            formatOptions, cancellationToken);
+    }
+
+    internal static Dictionary<string, object?> BuildCaptureParameters(
+        byte[]? queryPlanHash,
+        byte[]? queryHash,
+        string? storedProcName,
+        string? databaseName)
+    {
+        var parameters = new Dictionary<string, object?>();
+        AddIfNotNull(parameters, "@QueryPlanHash", queryPlanHash);
+        AddIfNotNull(parameters, "@QueryHash", queryHash);
+        AddIfNotNull(parameters, "@StoredProcName", storedProcName);
+        AddIfNotNull(parameters, "@DatabaseName", databaseName);
+        return parameters;
+    }
+
+    private async Task<string> CaptureSnapshotAsync(
+        string serverName,
+        Dictionary<string, object?> parameters,
+        CancellationToken cancellationToken)
+    {
+        foreach (var paramName in parameters.Keys)
+        {
+            if (BlockedParameters.Any(blocked =>
+                paramName.Equals(blocked, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new InvalidOperationException(
+                    $"Parameter '{paramName}' is not allowed (output table parameters are blocked).");
+            }
+        }
+
+        var serverConfig = Options.ResolveServer(serverName);
+
+        await using var connection = new SqlConnection(serverConfig.ConnectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        await using var command = new SqlCommand("sp_BlitzPlanCompare", connection)
+        {
+            CommandType = CommandType.StoredProcedure,
+            CommandTimeout = Options.CommandTimeoutSeconds
+        };
+
+        foreach (var (name, value) in parameters)
+        {
+            if (value is not null)
+                command.Parameters.AddWithValue(name, value);
+        }
+
+        try
+        {
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            if (!await reader.ReadAsync(cancellationToken))
+            {
+                throw new InvalidOperationException(
+                    $"sp_BlitzPlanCompare returned no rows on server '{serverName}' — " +
+                    $"no matching plan found for the supplied identifiers.");
+            }
+            if (reader.IsDBNull(0))
+            {
+                throw new InvalidOperationException(
+                    $"sp_BlitzPlanCompare returned a null CallStack on server '{serverName}'.");
+            }
+            return reader.GetString(0);
+        }
+        catch (SqlException ex) when (ex.Number == 2812)
+        {
+            throw new InvalidOperationException(
+                $"Stored procedure 'sp_BlitzPlanCompare' not found on server '{serverName}'. " +
+                "Requires the First Responder Kit demon_hunters branch: " +
+                "https://github.com/BrentOzarULTD/SQL-Server-First-Responder-Kit/tree/demon_hunters");
+        }
+    }
+
+    // ───────────────────────────────────────────────
+    // Capture-phase snapshot XML extraction
+    // ───────────────────────────────────────────────
+
+    private const string SnapshotRootElement = "BlitzPlanCompareSnapshot";
+
+    internal static string ExtractSnapshotXml(string callStack)
+    {
+        var openMarker = "<" + SnapshotRootElement;
+        var closeMarker = "</" + SnapshotRootElement + ">";
+
+        var start = callStack.IndexOf(openMarker, StringComparison.Ordinal);
+        var endTag = callStack.LastIndexOf(closeMarker, StringComparison.Ordinal);
+
+        if (start < 0 || endTag < 0 || endTag < start)
+        {
+            throw new InvalidOperationException(
+                $"sp_BlitzPlanCompare did not return a recognizable snapshot envelope " +
+                $"(expected <{SnapshotRootElement}> root). Upstream proc may have changed.");
+        }
+
+        var end = endTag + closeMarker.Length;
+        var sliced = callStack[start..end];
+
+        // Un-double T-SQL single-quote escapes ('' → ')
+        var undoubled = sliced.Replace("''", "'");
+
+        try
+        {
+            _ = XDocument.Parse(undoubled);
+        }
+        catch (System.Xml.XmlException ex)
+        {
+            throw new InvalidOperationException(
+                $"extracted snapshot XML failed to parse: {ex.Message}", ex);
+        }
+
+        return undoubled;
     }
 
     // ───────────────────────────────────────────────
@@ -412,6 +562,27 @@ public sealed class FirstResponderService : StoredProcedureServiceBase, IFirstRe
                 ["finding"] = 2000
             },
             MaxRowsOverride = maxRows
+        };
+    }
+
+    internal static ResultSetFormatOptions BuildBlitzPlanCompareOptions(bool? includeQueryPlans, bool? verbose)
+    {
+        if (verbose == true)
+            return new ResultSetFormatOptions { MaxStringLength = int.MaxValue };
+
+        var excluded = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (includeQueryPlans != true)
+            excluded.Add("CallStack");
+
+        return new ResultSetFormatOptions
+        {
+            ExcludedColumns = excluded,
+            TruncatedColumns = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Finding"] = 2000,
+                ["Details"] = 2000,
+                ["URL"] = 500
+            }
         };
     }
 }

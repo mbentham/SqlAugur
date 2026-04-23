@@ -280,4 +280,48 @@ public class FirstResponderFormatOptionsTests
         var options = FirstResponderService.BuildBlitzLockOptions(null, null, null);
         Assert.Null(options.MaxRowsOverride);
     }
+
+    // ───────────────────────────────────────────────
+    // BlitzPlanCompare
+    // ───────────────────────────────────────────────
+
+    [Fact]
+    public void BlitzPlanCompare_Default_ExcludesCallStack()
+    {
+        var options = FirstResponderService.BuildBlitzPlanCompareOptions(null, null);
+
+        Assert.Contains("CallStack", options.ExcludedColumns);
+    }
+
+    [Fact]
+    public void BlitzPlanCompare_Default_TruncatesCorrectly()
+    {
+        var options = FirstResponderService.BuildBlitzPlanCompareOptions(null, null);
+
+        Assert.Equal(2000, options.TruncatedColumns["Finding"]);
+        Assert.Equal(2000, options.TruncatedColumns["Details"]);
+        Assert.Equal(500, options.TruncatedColumns["URL"]);
+    }
+
+    [Fact]
+    public void BlitzPlanCompare_IncludeQueryPlans_KeepsCallStack()
+    {
+        var options = FirstResponderService.BuildBlitzPlanCompareOptions(
+            includeQueryPlans: true, verbose: null);
+
+        Assert.DoesNotContain("CallStack", options.ExcludedColumns);
+        // Truncation still applied
+        Assert.Equal(2000, options.TruncatedColumns["Finding"]);
+    }
+
+    [Fact]
+    public void BlitzPlanCompare_Verbose_ReturnsEmptyExclusions()
+    {
+        var options = FirstResponderService.BuildBlitzPlanCompareOptions(
+            null, verbose: true);
+
+        Assert.Empty(options.ExcludedColumns);
+        Assert.Empty(options.TruncatedColumns);
+        Assert.Equal(int.MaxValue, options.MaxStringLength);
+    }
 }

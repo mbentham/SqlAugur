@@ -314,7 +314,7 @@ The server loads configuration from multiple sources. Higher-priority sources ov
 
 ## Tools
 
-The server provides 29 tools organized into toolsets. Six core tools are always available. Additional toolsets are loaded at startup (static mode) or on demand (dynamic mode).
+The server provides 30 tools organized into toolsets. Six core tools are always available. Additional toolsets are loaded at startup (static mode) or on demand (dynamic mode).
 
 ### Core Tools
 
@@ -364,7 +364,7 @@ All DBA tools apply response size optimisation by default — XML query plan col
 Some tools have additional parameters: `includeXmlReports` (BlitzLock, HealthParser, HumanEventsBlockViewer), `compact` (sp_WhoIsActive), `verboseMetrics` (QuickieStore).
 
 <details>
-<summary><strong>First Responder Kit</strong> (6 tools) — requires <code>EnableFirstResponderKit: true</code></summary>
+<summary><strong>First Responder Kit</strong> (7 tools) — requires <code>EnableFirstResponderKit: true</code></summary>
 
 Install from: [github.com/BrentOzarULTD/SQL-Server-First-Responder-Kit](https://github.com/BrentOzarULTD/SQL-Server-First-Responder-Kit)
 
@@ -376,6 +376,7 @@ Install from: [github.com/BrentOzarULTD/SQL-Server-First-Responder-Kit](https://
 | `sp_blitz_index` | Index analysis — missing, unused, and duplicate indexes with usage patterns. |
 | `sp_blitz_who` | Active query monitor — what's running, blocking info, tempdb usage, query plans. |
 | `sp_blitz_lock` | Deadlock analysis from the `system_health` extended event session. |
+| `sp_blitz_plan_compare` | Cross-server query plan comparison — captures a plan snapshot on one server and compares it to the cached plan on a second server without using linked servers. Requires the [demon_hunters branch](https://github.com/BrentOzarULTD/SQL-Server-First-Responder-Kit/tree/demon_hunters) until merged to main. |
 
 </details>
 

@@ -36,6 +36,7 @@ internal static class ToolRegistry
         typeof(BlitzIndexTool),
         typeof(BlitzWhoTool),
         typeof(BlitzLockTool),
+        typeof(BlitzPlanCompareTool),
     ];
 
     internal static readonly Type[] DarlingDataTools =

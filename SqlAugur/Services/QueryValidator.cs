@@ -76,6 +76,16 @@ public static class QueryValidator
             ErrorMessage ??= "OPENROWSET BULK is not allowed.";
         }
 
+        public override void Visit(OpenRowsetCosmos node)
+        {
+            ErrorMessage ??= "OPENROWSET with external data providers (e.g. Cosmos DB) is not allowed.";
+        }
+
+        public override void Visit(InternalOpenRowset node)
+        {
+            ErrorMessage ??= "Internal OPENROWSET variants are not allowed.";
+        }
+
         public override void Visit(OpenQueryTableReference node)
         {
             ErrorMessage ??= "OPENQUERY is not allowed.";

@@ -208,6 +208,13 @@ public class QueryValidatorTests
     }
 
     [Fact]
+    public void OpenrowsetBulk_IsBlocked()
+    {
+        Assert.NotNull(QueryValidator.Validate(
+            "SELECT BulkColumn FROM OPENROWSET(BULK 'C:\\file.txt', SINGLE_CLOB) AS t"));
+    }
+
+    [Fact]
     public void Dbcc_IsBlocked()
     {
         Assert.NotNull(QueryValidator.Validate("DBCC CHECKDB"));

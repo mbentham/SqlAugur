@@ -71,6 +71,11 @@ public static class QueryValidator
             ErrorMessage ??= "OPENROWSET is not allowed.";
         }
 
+        public override void Visit(BulkOpenRowset node)
+        {
+            ErrorMessage ??= "OPENROWSET BULK is not allowed.";
+        }
+
         public override void Visit(OpenQueryTableReference node)
         {
             ErrorMessage ??= "OPENQUERY is not allowed.";

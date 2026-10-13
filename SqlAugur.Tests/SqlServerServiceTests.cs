@@ -67,7 +67,7 @@ public class SqlServerServiceTests
     public async Task ExecuteQuery_InvalidQuery_ThrowsInvalidOperationException()
     {
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            _service.ExecuteQueryAsync("testserver", "master", "DROP TABLE users", CancellationToken.None));
+            _service.ExecuteQueryAsync("testserver", "master", "DROP TABLE users", false, CancellationToken.None));
 
         Assert.Contains("SELECT", ex.Message);
     }
@@ -76,7 +76,7 @@ public class SqlServerServiceTests
     public async Task ExecuteQuery_EmptyQuery_ThrowsInvalidOperationException()
     {
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            _service.ExecuteQueryAsync("testserver", "master", "", CancellationToken.None));
+            _service.ExecuteQueryAsync("testserver", "master", "", false, CancellationToken.None));
 
         Assert.Contains("empty", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -85,7 +85,7 @@ public class SqlServerServiceTests
     public async Task ExecuteQuery_MultipleStatements_ThrowsInvalidOperationException()
     {
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            _service.ExecuteQueryAsync("testserver", "master", "SELECT 1; SELECT 2", CancellationToken.None));
+            _service.ExecuteQueryAsync("testserver", "master", "SELECT 1; SELECT 2", false, CancellationToken.None));
 
         Assert.Contains("Multiple", ex.Message);
     }
@@ -94,7 +94,7 @@ public class SqlServerServiceTests
     public async Task ExecuteQuery_SelectInto_ThrowsInvalidOperationException()
     {
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            _service.ExecuteQueryAsync("testserver", "master", "SELECT * INTO #temp FROM sys.objects", CancellationToken.None));
+            _service.ExecuteQueryAsync("testserver", "master", "SELECT * INTO #temp FROM sys.objects", false, CancellationToken.None));
 
         Assert.Contains("SELECT INTO", ex.Message);
     }
@@ -107,7 +107,7 @@ public class SqlServerServiceTests
     public async Task ExecuteQuery_UnknownServer_ThrowsArgumentException()
     {
         var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ExecuteQueryAsync("nonexistent", "master", "SELECT 1", CancellationToken.None));
+            _service.ExecuteQueryAsync("nonexistent", "master", "SELECT 1", false, CancellationToken.None));
 
         Assert.Contains("nonexistent", ex.Message);
         Assert.Contains("list_servers", ex.Message);

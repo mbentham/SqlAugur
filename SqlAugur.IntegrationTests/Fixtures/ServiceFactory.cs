@@ -7,7 +7,7 @@ namespace SqlAugur.IntegrationTests.Fixtures;
 
 internal static class ServiceFactory
 {
-    internal static SqlAugurOptions BuildOptions(string connectionString, int maxRows = 1000)
+    internal static SqlAugurOptions BuildOptions(string connectionString, int maxRows = 1000, string? resultsDirectory = null)
     {
         return new SqlAugurOptions
         {
@@ -16,13 +16,14 @@ internal static class ServiceFactory
                 [SqlServerContainerFixture.ServerName] = new() { ConnectionString = connectionString }
             },
             MaxRows = maxRows,
-            CommandTimeoutSeconds = 30
+            CommandTimeoutSeconds = 30,
+            ResultsDirectory = resultsDirectory
         };
     }
 
-    internal static SqlServerService CreateSqlServerService(string connectionString, int maxRows = 1000)
+    internal static SqlServerService CreateSqlServerService(string connectionString, int maxRows = 1000, string? resultsDirectory = null)
     {
-        var options = Options.Create(BuildOptions(connectionString, maxRows));
+        var options = Options.Create(BuildOptions(connectionString, maxRows, resultsDirectory));
         return new SqlServerService(options, NullLogger<SqlServerService>.Instance);
     }
 

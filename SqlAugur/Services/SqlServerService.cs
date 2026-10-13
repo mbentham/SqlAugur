@@ -1,3 +1,4 @@
+using System.Data.Common;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Data.SqlClient;
@@ -18,6 +19,13 @@ public sealed class SqlServerService : ISqlServerService
         WriteIndented = false
     };
 
+    // Inline results pass to a file past roughly this many characters: under Claude Code's
+    // default MCP output cap (25,000 tokens), above which the client saves the response to its
+    // own file as a single JSON line too long to page through.
+    internal const int InlineCharLimit = 40_000;
+    internal const int PreviewRows = 10;
+    internal const int PreviewMaxStringLength = 100;
+
     public SqlServerService(
         IOptions<SqlAugurOptions> options,
         ILogger<SqlServerService> logger)
@@ -31,7 +39,7 @@ public sealed class SqlServerService : ISqlServerService
         return _options.Servers.Keys.OrderBy(k => k).ToList();
     }
 
-    public async Task<string> ExecuteQueryAsync(string serverName, string databaseName, string query, CancellationToken cancellationToken)
+    public async Task<string> ExecuteQueryAsync(string serverName, string databaseName, string query, bool toFile, CancellationToken cancellationToken)
     {
         // Validate server name
         var serverConfig = _options.ResolveServer(serverName);
@@ -55,11 +63,32 @@ public sealed class SqlServerService : ISqlServerService
         };
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        return await FormatResultAsync(reader, toFile, cancellationToken);
+    }
 
-        // Read rows up to MaxRows
-        var rows = new List<Dictionary<string, object?>>();
+    /// <summary>
+    /// Returns the result inline as JSON <c>{truncated, rows}</c> while it stays under
+    /// ResultFileThresholdRows and <see cref="InlineCharLimit"/>; past either (or when
+    /// <paramref name="toFile"/> is set) streams it to a CSV file and returns the path,
+    /// row count, columns and a short preview instead. MaxRows caps both paths.
+    /// </summary>
+    internal async Task<string> FormatResultAsync(DbDataReader reader, bool toFile, CancellationToken cancellationToken)
+    {
+        var columns = new string[reader.FieldCount];
+        var types = new string[reader.FieldCount];
+        for (var i = 0; i < columns.Length; i++)
+        {
+            columns[i] = reader.GetName(i);
+            types[i] = reader.GetDataTypeName(i);
+        }
+
+        var threshold = _options.ResultFileThresholdRows;
+        var rows = new List<object?[]>();
         var truncated = false;
-        while (await reader.ReadAsync(cancellationToken))
+        var spill = toFile;
+        long chars = 0;
+
+        while (!spill && await reader.ReadAsync(cancellationToken))
         {
             if (rows.Count >= _options.MaxRows)
             {
@@ -67,24 +96,107 @@ public sealed class SqlServerService : ISqlServerService
                 break;
             }
 
-            var row = new Dictionary<string, object?>();
-            for (var i = 0; i < reader.FieldCount; i++)
+            var values = ReadRow(reader);
+            rows.Add(values);
+
+            if (threshold > 0)
             {
-                var name = reader.GetName(i);
-                var value = reader.IsDBNull(i) ? null : FormatValue(reader.GetValue(i));
-                row[name] = value;
+                chars += EstimateChars(columns, values);
+                spill = rows.Count > threshold || chars > InlineCharLimit;
             }
-            rows.Add(row);
         }
 
-        // Build response envelope
-        var response = new Dictionary<string, object?>
+        if (spill)
+            return await WriteResultFileAsync(reader, columns, types, rows, cancellationToken);
+
+        return JsonSerializer.Serialize(new Dictionary<string, object?>
         {
             ["truncated"] = truncated,
-            ["rows"] = rows
-        };
+            ["rows"] = rows.Select(r => ToDictionary(columns, r)).ToList()
+        }, JsonOptions);
+    }
 
-        return JsonSerializer.Serialize(response, JsonOptions);
+    private async Task<string> WriteResultFileAsync(
+        DbDataReader reader, string[] columns, string[] types, List<object?[]> bufferedRows,
+        CancellationToken cancellationToken)
+    {
+        var (path, writer) = ResultFiles.Create(_options.ResultsDirectory ?? ResultFiles.DefaultDirectory);
+        var rowCount = 0;
+        var truncated = false;
+        var preview = new List<object?[]>();
+
+        try
+        {
+            await using (writer)
+            {
+                ResultFiles.WriteRow(writer, columns);
+                foreach (var row in bufferedRows)
+                    Write(row);
+
+                while (await reader.ReadAsync(cancellationToken))
+                {
+                    if (rowCount >= _options.MaxRows)
+                    {
+                        truncated = true;
+                        break;
+                    }
+                    Write(ReadRow(reader));
+                }
+            }
+        }
+        catch
+        {
+            // Don't leave a partial result behind; the original exception is what matters.
+            try { File.Delete(path); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+            throw;
+        }
+
+        _logger.LogInformation("Wrote {RowCount} rows to {Path}", rowCount, path);
+
+        return JsonSerializer.Serialize(new Dictionary<string, object?>
+        {
+            ["truncated"] = truncated,
+            ["rowCount"] = rowCount,
+            ["file"] = path,
+            ["columns"] = columns.Select((name, i) => new { name, type = types[i] }).ToList(),
+            ["preview"] = preview.Select(r => ToDictionary(columns, r, PreviewMaxStringLength)).ToList(),
+            ["note"] = "Full result is in the CSV file (UTF-8, header row, NULL written as an empty field). " +
+                       "Process it with code rather than reading the whole file into context."
+        }, JsonOptions);
+
+        void Write(object?[] row)
+        {
+            ResultFiles.WriteRow(writer, row);
+            rowCount++;
+            if (preview.Count < PreviewRows)
+                preview.Add(row);
+        }
+    }
+
+    private static object?[] ReadRow(DbDataReader reader)
+    {
+        var values = new object?[reader.FieldCount];
+        for (var i = 0; i < values.Length; i++)
+            values[i] = reader.IsDBNull(i) ? null : FormatValue(reader.GetValue(i));
+        return values;
+    }
+
+    private static Dictionary<string, object?> ToDictionary(string[] columns, object?[] values, int maxStringLength = int.MaxValue)
+    {
+        var row = new Dictionary<string, object?>();
+        for (var i = 0; i < columns.Length; i++)
+            row[columns[i]] = values[i] is string s && s.Length > maxStringLength ? s[..maxStringLength] + "…" : values[i];
+        return row;
+    }
+
+    // Rough serialized size of one row (key + value + punctuation). Only needs to be in the
+    // right ballpark to keep inline responses under InlineCharLimit.
+    private static long EstimateChars(string[] columns, object?[] values)
+    {
+        long total = 2;
+        for (var i = 0; i < values.Length; i++)
+            total += columns[i].Length + 6 + (values[i] is string s ? s.Length : 8);
+        return total;
     }
 
     public async Task<string> ListDatabasesAsync(string serverName, CancellationToken cancellationToken)

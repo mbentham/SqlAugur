@@ -133,6 +133,67 @@ public class SqlAugurOptionsValidatorTests
     }
 
     // ───────────────────────────────────────────────
+    // Result files
+    // ───────────────────────────────────────────────
+
+    [Theory]
+    [InlineData(-1, false)]
+    [InlineData(0, true)]
+    [InlineData(100_000, true)]
+    [InlineData(100_001, false)]
+    public void ResultFileThresholdRows_Boundaries(int value, bool shouldSucceed)
+    {
+        var result = _validator.Validate(null, new SqlAugurOptions
+        {
+            Servers = MakeValidOptions().Servers,
+            ResultFileThresholdRows = value
+        });
+
+        Assert.Equal(shouldSucceed, result.Succeeded);
+    }
+
+    [Theory]
+    [InlineData(0, false)]
+    [InlineData(1, true)]
+    [InlineData(365, true)]
+    [InlineData(366, false)]
+    public void ResultFileRetentionDays_Boundaries(int value, bool shouldSucceed)
+    {
+        var result = _validator.Validate(null, new SqlAugurOptions
+        {
+            Servers = MakeValidOptions().Servers,
+            ResultFileRetentionDays = value
+        });
+
+        Assert.Equal(shouldSucceed, result.Succeeded);
+    }
+
+    [Fact]
+    public void RelativeResultsDirectory_Fails()
+    {
+        var result = _validator.Validate(null, new SqlAugurOptions
+        {
+            Servers = MakeValidOptions().Servers,
+            ResultsDirectory = "results"
+        });
+
+        Assert.True(result.Failed);
+        Assert.Contains("ResultsDirectory", result.FailureMessage);
+    }
+
+    [Fact]
+    public void AbsoluteResultsDirectory_Succeeds()
+    {
+        var result = _validator.Validate(null, new SqlAugurOptions
+        {
+            Servers = MakeValidOptions().Servers,
+            ResultsDirectory = Path.GetTempPath()
+        });
+
+        Assert.True(result.Succeeded);
+    }
+
+    // ───────────────────────────────────────────────
     // Timeouts
     // ───────────────────────────────────────────────
 

@@ -80,7 +80,7 @@ public class QueryPlanToolTests : IDisposable
 
         public IReadOnlyList<string> GetServerNames() => [];
 
-        public Task<string> ExecuteQueryAsync(string serverName, string databaseName, string query, CancellationToken cancellationToken)
+        public Task<string> ExecuteQueryAsync(string serverName, string databaseName, string query, bool toFile, CancellationToken cancellationToken)
             => throw new NotImplementedException();
 
         public Task<string> ListDatabasesAsync(string serverName, CancellationToken cancellationToken)

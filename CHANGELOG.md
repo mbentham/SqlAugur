@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-10-13
+
+### Added
+- `read_data` result files. Results over `ResultFileThresholdRows` (default 500) or about 40,000 characters are streamed to a CSV file (UTF-8, header row, NULL as an empty field) in `ResultsDirectory` instead of being returned inline. The response gives the file path, row count, column names and SQL types, and a 10-row preview with long strings shortened. A new `toFile` parameter forces file output for any size. Set `ResultFileThresholdRows` to `0` to keep the old inline-only behaviour.
+- `ResultFileRetentionDays` (default 7): result files older than this are deleted at startup. Only files named `read_data-*.csv` are touched.
+
+### Fixed
+- Large `read_data` results no longer disconnect the server. Claude Code's stdio client drops any MCP server that writes a single message over 16MB, which a result near `MaxRows` could reach (100,000 rows at about 170 bytes each). The disconnect presented as the server crashing mid-session, with every in-flight call failing "Connection closed".
+
+### Changed
+- `MaxRows` now caps file output as well as inline results. The large-`MaxRows` startup warning only fires when result files are disabled.
+- Connections now default to `Application Name=SqlAugur`, so SqlAugur traffic is identifiable in `sys.dm_exec_sessions.program_name`, Extended Events and monitoring tools instead of showing as `Core Microsoft SqlClient Data Provider`. An `Application Name` already in the connection string is kept.
+- Updated Microsoft.Data.SqlClient 7.1.1, Microsoft.SqlServer.TransactSql.ScriptDom 180.140.0, Microsoft.Extensions.Hosting / System.Threading.RateLimiting 10.0.12.
+- Test projects: xunit.v3 4.0.2 and xunit.runner.visualstudio 4.0.1 (major; tests now run on Microsoft.Testing.Platform, and a new `global.json` opts `dotnet test` into it as the .NET 10 SDK requires; existing `dotnet test` commands and `--filter` expressions work unchanged), Microsoft.NET.Test.Sdk 18.10.1, coverlet.collector 10.1.0, Testcontainers 4.16.0.
+
 ## [1.6.3] - 2026-09-01
 
 ### Changed

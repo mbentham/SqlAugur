@@ -4,6 +4,9 @@ public sealed class SqlAugurOptions
 {
     public Dictionary<string, SqlServerConnection> Servers { get; init; } = new();
     public int MaxRows { get; init; } = 1000;
+    public int ResultFileThresholdRows { get; init; } = 500;
+    public int ResultFileRetentionDays { get; init; } = 7;
+    public string? ResultsDirectory { get; init; }
     public int CommandTimeoutSeconds { get; init; } = 30;
     public int MaxConcurrentQueries { get; init; } = 5;
     public int MaxQueriesPerMinute { get; init; } = 60;

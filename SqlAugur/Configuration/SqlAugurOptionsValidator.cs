@@ -59,6 +59,15 @@ public sealed class SqlAugurOptionsValidator : IValidateOptions<SqlAugurOptions>
         if (options.MaxRows < 1 || options.MaxRows > 100_000)
             errors.Add($"MaxRows must be between 1 and 100,000 (got {options.MaxRows}).");
 
+        if (options.ResultFileThresholdRows < 0 || options.ResultFileThresholdRows > 100_000)
+            errors.Add($"ResultFileThresholdRows must be between 0 (disabled) and 100,000 (got {options.ResultFileThresholdRows}).");
+
+        if (options.ResultFileRetentionDays < 1 || options.ResultFileRetentionDays > 365)
+            errors.Add($"ResultFileRetentionDays must be between 1 and 365 (got {options.ResultFileRetentionDays}).");
+
+        if (!string.IsNullOrEmpty(options.ResultsDirectory) && !Path.IsPathFullyQualified(options.ResultsDirectory))
+            errors.Add($"ResultsDirectory must be an absolute path (got '{options.ResultsDirectory}').");
+
         if (options.CommandTimeoutSeconds < 1 || options.CommandTimeoutSeconds > 600)
             errors.Add($"CommandTimeoutSeconds must be between 1 and 600 (got {options.CommandTimeoutSeconds}).");
 

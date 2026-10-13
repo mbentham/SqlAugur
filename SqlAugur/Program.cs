@@ -60,6 +60,11 @@ builder.Logging.AddConsole(consoleLogOptions =>
 // Bind and validate configuration
 builder.Services.Configure<SqlAugurOptions>(
     builder.Configuration.GetSection("SqlAugur"));
+builder.Services.PostConfigure<SqlAugurOptions>(o =>
+{
+    foreach (var connection in o.Servers.Values)
+        connection.ConnectionString = SqlServerConnection.WithDefaultApplicationName(connection.ConnectionString);
+});
 builder.Services.AddSingleton<IValidateOptions<SqlAugurOptions>, SqlAugurOptionsValidator>();
 
 // Register services
@@ -165,7 +170,13 @@ foreach (var (serverName, connection) in options.Servers)
     }
 }
 
-if (options.MaxRows > 10_000)
-    startupLogger.LogWarning("MaxRows is set to {MaxRows}. Large values may produce very large JSON responses.", options.MaxRows);
+if (options.ResultFileThresholdRows == 0 && options.MaxRows > 10_000)
+    startupLogger.LogWarning("MaxRows is set to {MaxRows} with result files disabled. Large values may produce very large JSON responses.", options.MaxRows);
+
+var resultsDirectory = options.ResultsDirectory ?? ResultFiles.DefaultDirectory;
+var expiredResultFiles = ResultFiles.DeleteExpired(resultsDirectory, TimeSpan.FromDays(options.ResultFileRetentionDays));
+if (expiredResultFiles > 0)
+    startupLogger.LogInformation("Deleted {Count} result files older than {Days} days from {Directory}",
+        expiredResultFiles, options.ResultFileRetentionDays, resultsDirectory);
 
 await host.RunAsync();

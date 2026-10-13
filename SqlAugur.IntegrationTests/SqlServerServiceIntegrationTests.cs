@@ -26,7 +26,7 @@ public sealed class SqlServerServiceIntegrationTests
 
         var json = await service.ExecuteQueryAsync(Server, Db,
             "SELECT ProductId, Name, Price FROM dbo.Products ORDER BY ProductId",
-            CancellationToken.None);
+            false, CancellationToken.None);
 
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
@@ -46,7 +46,7 @@ public sealed class SqlServerServiceIntegrationTests
 
         var json = await service.ExecuteQueryAsync(Server, Db,
             "SELECT Name, Description FROM dbo.Categories WHERE Name = 'Books'",
-            CancellationToken.None);
+            false, CancellationToken.None);
 
         using var doc = JsonDocument.Parse(json);
         var rows = doc.RootElement.GetProperty("rows");
@@ -61,12 +61,40 @@ public sealed class SqlServerServiceIntegrationTests
 
         var json = await service.ExecuteQueryAsync(Server, Db,
             "SELECT ProductId FROM dbo.Products ORDER BY ProductId",
-            CancellationToken.None);
+            false, CancellationToken.None);
 
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
         Assert.True(root.GetProperty("truncated").GetBoolean());
         Assert.Equal(2, root.GetProperty("rows").GetArrayLength());
+    }
+
+    [Fact]
+    public async Task ExecuteQuery_ToFile_WritesCsvWithSqlTypeNames()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "sqlaugur-it-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var service = ServiceFactory.CreateSqlServerService(_fixture.ConnectionString, resultsDirectory: dir);
+
+            var json = await service.ExecuteQueryAsync(Server, Db,
+                "SELECT ProductId, Name, Price FROM dbo.Products ORDER BY ProductId",
+                true, CancellationToken.None);
+
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            Assert.Equal(3, root.GetProperty("rowCount").GetInt32());
+            Assert.Equal("int", root.GetProperty("columns")[0].GetProperty("type").GetString());
+
+            var lines = File.ReadAllLines(root.GetProperty("file").GetString()!);
+            Assert.Equal("ProductId,Name,Price", lines[0]);
+            Assert.Equal(4, lines.Length);
+        }
+        finally
+        {
+            if (Directory.Exists(dir))
+                Directory.Delete(dir, recursive: true);
+        }
     }
 
     [Fact]
@@ -84,7 +112,7 @@ public sealed class SqlServerServiceIntegrationTests
             FROM dbo.Categories c
             INNER JOIN ProductCounts pc ON pc.CategoryId = c.CategoryId
             ORDER BY c.Name
-            """, CancellationToken.None);
+            """, false, CancellationToken.None);
 
         using var doc = JsonDocument.Parse(json);
         var rows = doc.RootElement.GetProperty("rows");
@@ -102,7 +130,7 @@ public sealed class SqlServerServiceIntegrationTests
             INNER JOIN dbo.Products p ON p.ProductId = oi.ProductId
             INNER JOIN sales.Orders o ON o.OrderId = oi.OrderId
             ORDER BY oi.OrderItemId
-            """, CancellationToken.None);
+            """, false, CancellationToken.None);
 
         using var doc = JsonDocument.Parse(json);
         Assert.Equal(3, doc.RootElement.GetProperty("rows").GetArrayLength());
@@ -115,7 +143,7 @@ public sealed class SqlServerServiceIntegrationTests
 
         var json = await service.ExecuteQueryAsync(Server, Db,
             "SELECT CreatedAt FROM dbo.Products WHERE ProductId = 1",
-            CancellationToken.None);
+            false, CancellationToken.None);
 
         using var doc = JsonDocument.Parse(json);
         var rows = doc.RootElement.GetProperty("rows");
@@ -133,7 +161,7 @@ public sealed class SqlServerServiceIntegrationTests
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             service.ExecuteQueryAsync(Server, Db,
-                "DROP TABLE dbo.Products", CancellationToken.None));
+                "DROP TABLE dbo.Products", false, CancellationToken.None));
     }
 
     // ───────────────────────────────────────────────

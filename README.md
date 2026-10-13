@@ -271,8 +271,11 @@ The server loads configuration from multiple sources. Higher-priority sources ov
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `Servers` | — | Named SQL Server connections (name → connection string) |
-| `MaxRows` | 1000 | Maximum rows returned per query |
+| `Servers` | — | Named SQL Server connections (name → connection string). Connections identify themselves to SQL Server as `SqlAugur` (`program_name`, Extended Events `client_app_name`) unless the connection string sets its own `Application Name`. |
+| `MaxRows` | 1000 | Maximum rows returned per query, inline or in a result file |
+| `ResultFileThresholdRows` | 500 | `read_data` results over this many rows (or about 40,000 characters) are written to a CSV file instead of returned inline, avoiding oversized stdio messages. `0` disables. |
+| `ResultsDirectory` | `sqlaugur/results` under the user's local application data folder (`%LOCALAPPDATA%\sqlaugur\results` on Windows) | Where result files are written. Must be an absolute path. |
+| `ResultFileRetentionDays` | 7 | Result files older than this are deleted at startup |
 | `CommandTimeoutSeconds` | 30 | SQL command timeout for all queries and procedures |
 | `MaxConcurrentQueries` | 5 | Maximum number of SQL queries that can execute concurrently |
 | `MaxQueriesPerMinute` | 60 | Maximum queries allowed per minute (token bucket rate limit) |
@@ -294,7 +297,7 @@ The server provides 31 tools organized into toolsets. Six core tools are always 
 |------|-------------|
 | `list_servers` | Lists available SQL Server instances configured in `appsettings.json`. |
 | `list_databases` | Lists all databases on a named server with names, IDs, states, and creation dates. |
-| `read_data` | Executes a read-only SQL SELECT query. Only `SELECT` and `WITH` (CTE) queries are allowed. Results returned as JSON with a configurable row limit. |
+| `read_data` | Executes a read-only SQL SELECT query. Only `SELECT` and `WITH` (CTE) queries are allowed. Small results are returned as JSON; large ones go to a CSV file, returning its path, row count, columns and a 10-row preview. Pass `toFile: true` to always get a file. |
 | `get_query_plan` | Returns the estimated or actual XML execution plan for a SELECT query. |
 | `get_schema_overview` | Concise Markdown schema overview: tables, columns, PKs, FKs, unique/check constraints, defaults. Supports `compact` mode, schema and table filtering. |
 | `describe_table` | Comprehensive table metadata in Markdown: columns, data types, nullability, defaults, identity, computed expressions, indexes, FKs, constraints. |
